@@ -15,7 +15,7 @@ DISTRIB_RELEASE=$OPENWRT_VERSION
 add_packages() {
     echo "try add $1"
 
-    all_supported=$(curl https://sourceforge.net/projects/ekko-openwrt-dist/files/$1/ | grep -e "<th.*files/$1" | grep -o 'href="/projects[^"]*"' | sed 's/href="//' | sed 's/"$//' | awk -F/ '{print $6}')
+    all_supported=$(curl -ks https://downloads.openwrt.org/releases/ | grep -e "<tr.*/$1" | grep -o 'href="[0-9].*/"' | sed 's/href="//' | sed 's/\/"//' | awk '{printf "%s ", $0} END {print ""}')
     echo "All supported version: "
     echo "$all_supported"
 

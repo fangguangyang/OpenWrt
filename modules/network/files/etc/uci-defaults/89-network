@@ -1,11 +1,11 @@
-uci batch << EOF
-set network.wan.proto='pppoe'
-set network.wan.username='$PPPOE_USERNAME'
-set network.wan.password='$PPPOE_PASSWORD'
+# uci batch << EOF
+# set network.wan.proto='pppoe'
+# set network.wan.username='$PPPOE_USERNAME'
+# set network.wan.password='$PPPOE_PASSWORD'
 
-commit
-EOF
-fi
+# commit
+# EOF
+# fi
 
 uci batch << EOF
 
