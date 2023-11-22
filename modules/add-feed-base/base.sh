@@ -17,7 +17,7 @@ add_packages() {
     echo "try add $1"
 
     # | awk '{printf "%s ", $0} END {print ""}')
-    all_supported=$(curl -ks https://downloads.openwrt.org/releases/ | grep -e "<tr.*/$1" | grep -o 'href="[0-9].*/"' | sed 's/href="//' | sed 's/\/"//')
+    all_supported=$(curl https://downloads.openwrt.org/releases/ | grep -e "<tr.*/$1" | grep -o 'href="[0-9].*/"' | sed 's/href="//' | sed 's/\/"//')
 
     echo "All supported version: "
     echo "$all_supported"
