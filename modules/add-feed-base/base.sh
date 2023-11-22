@@ -25,47 +25,47 @@ add_packages() {
     version=$(echo "$DISTRIB_RELEASE" | awk -F- '{print $1}')
     echo "Current version: $version"
 
-    # get the first two version number
-    big_version=$(echo "$version" | awk -F. '{print $1"."$2}')
+    # # get the first two version number
+    # big_version=$(echo "$version" | awk -F. '{print $1"."$2}')
 
-    if [ "$1" == "luci" ]; then
-        supported=$(echo "$all_supported" | grep "$big_version")
-        feed_version="$DISTRIB_RELEASE"
-    else
-        supported=$(echo "$all_supported" | grep $DISTRIB_ARCH | grep $big_version)
-        feed_version="$DISTRIB_ARCH-v$DISTRIB_RELEASE"
-    fi
+    # if [ "$1" == "luci" ]; then
+    #     supported=$(echo "$all_supported" | grep "$big_version")
+    #     feed_version="$DISTRIB_RELEASE"
+    # else
+    #     supported=$(echo "$all_supported" | grep $DISTRIB_ARCH | grep $big_version)
+    #     feed_version="$DISTRIB_ARCH-v$DISTRIB_RELEASE"
+    # fi
 
-    echo "Supported version: "
-    echo "$supported"
+    # echo "Supported version: "
+    # echo "$supported"
 
-    if [ -z "$supported" ]; then
-        echo "Your device is not supported"
-        exit 1
-    fi
+    # if [ -z "$supported" ]; then
+    #     echo "Your device is not supported"
+    #     exit 1
+    # fi
 
-    full_support=0
-    for i in $supported; do
-        if [ "$i" = "$feed_version" ]; then
-            full_support=1
-            break
-        fi
-    done
+    # full_support=0
+    # for i in $supported; do
+    #     if [ "$i" = "$feed_version" ]; then
+    #         full_support=1
+    #         break
+    #     fi
+    # done
 
-    if [ "$full_support" = "0" ]; then
-        echo "Your device is not fully supported"
-        echo "Find the latest version that supports your device"
+    # if [ "$full_support" = "0" ]; then
+    #     echo "Your device is not fully supported"
+    #     echo "Find the latest version that supports your device"
 
-        # 过滤掉 rc 和 SNAPSHOT 版本, 不用 grep
-        final_release=$(echo "$supported" | grep -v "\-rc" | grep -v "SNAPSHOT" | tail -n 1)
-        if [ -z "$final_release" ]; then
-            echo "No final release found, use the latest rc version"
-            feed_version=$(echo "$supported" | grep "\-rc" | tail -n 1)
-        else
-            feed_version=$final_release
-        fi
-    fi
-    echo "Feed version: $feed_version"
+    #     # 过滤掉 rc 和 SNAPSHOT 版本, 不用 grep
+    #     final_release=$(echo "$supported" | grep -v "\-rc" | grep -v "SNAPSHOT" | tail -n 1)
+    #     if [ -z "$final_release" ]; then
+    #         echo "No final release found, use the latest rc version"
+    #         feed_version=$(echo "$supported" | grep "\-rc" | tail -n 1)
+    #     else
+    #         feed_version=$final_release
+    #     fi
+    # fi
+    # echo "Feed version: $feed_version"
     FEED_CONF="src/gz brainiac https://cdn.jsdelivr.net/gh/fangguangyang/openwrt-dist@packages/$PACKAGES_ARCH"
     mkdir -p files/etc/opkg/
     echo "$FEED_CONF" >> files/etc/opkg/customfeeds.conf
