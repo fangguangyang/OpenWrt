@@ -9,6 +9,7 @@ PACKAGES_ARCH=$(cat .config | grep CONFIG_TARGET_ARCH_PACKAGES | awk -F '=' '{pr
 OPENWRT_VERSION=$(cat ./include/version.mk | grep 'VERSION_NUMBER:=$(if' | awk -F ',' '{print $3}' | awk -F ')' '{print $1}')
 BIG_VERSION=$(echo $OPENWRT_VERSION | awk -F '.' '{print $1"."$2}')
 
+# PACKAGES_ARCH: x86_64 OPENWRT_VERSION: 23.05.2 BIG_VERSION: 23.05
 echo "PACKAGES_ARCH: $PACKAGES_ARCH OPENWRT_VERSION: $OPENWRT_VERSION BIG_VERSION: $BIG_VERSION"
 DISTRIB_ARCH=$PACKAGES_ARCH
 DISTRIB_RELEASE=$OPENWRT_VERSION
@@ -63,11 +64,11 @@ add_packages() {
         fi
     fi
     echo "Feed version: $feed_version"
-    EKKOG_FEED="src/gz ekkog_$1 https://ghproxy.imciel.com/https://downloads.sourceforge.net/project/ekko-openwrt-dist/$1/$feed_version"
+    FEED_CONF="src/gz brainiac https://cdn.jsdelivr.net/gh/fangguangyang/openwrt-dist@packages/$PACKAGES_ARCH"
     mkdir -p files/etc/opkg/
-    echo "$EKKOG_FEED" >> files/etc/opkg/customfeeds.conf
+    echo "$FEED_CONF" >> files/etc/opkg/customfeeds.conf
     # 添加软件源到第一行
-    echo "$EKKOG_FEED" | cat - ./repositories.conf > temp && mv temp ./repositories.conf
+    echo "$FEED_CONF" | cat - ./repositories.conf > temp && mv temp ./repositories.conf
 }
 
 add_geodata() {
