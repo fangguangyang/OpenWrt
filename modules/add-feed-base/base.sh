@@ -16,7 +16,9 @@ DISTRIB_RELEASE=$OPENWRT_VERSION
 add_packages() {
     echo "try add $1"
 
-    all_supported=$(curl -ks https://downloads.openwrt.org/releases/ | grep -e "<tr.*/$1" | grep -o 'href="[0-9].*/"' | sed 's/href="//' | sed 's/\/"//' | awk '{printf "%s ", $0} END {print ""}')
+    # | awk '{printf "%s ", $0} END {print ""}')
+    all_supported=$(curl -ks https://downloads.openwrt.org/releases/ | grep -e "<tr.*/$1" | grep -o 'href="[0-9].*/"' | sed 's/href="//' | sed 's/\/"//')
+
     echo "All supported version: "
     echo "$all_supported"
 
