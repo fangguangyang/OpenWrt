@@ -8,6 +8,7 @@ fi
 PACKAGES_ARCH=$(cat .config | grep CONFIG_TARGET_ARCH_PACKAGES | awk -F '=' '{print $2}' | sed 's/"//g')
 OPENWRT_VERSION=$(cat ./include/version.mk | grep 'VERSION_NUMBER:=$(if' | awk -F ',' '{print $3}' | awk -F ')' '{print $1}')
 BIG_VERSION=$(echo $OPENWRT_VERSION | awk -F '.' '{print $1"."$2}')
+ALL_SUPPORTED=$(curl -ks https://downloads.openwrt.org/releases/ | grep -e "<tr.*/$1" | grep -o 'href="[0-9].*/"' | sed 's/href="//' | sed 's/\/"//' | awk '{print $1}')
 
 # PACKAGES_ARCH: x86_64 OPENWRT_VERSION: 23.05.2 BIG_VERSION: 23.05
 echo "PACKAGES_ARCH: $PACKAGES_ARCH OPENWRT_VERSION: $OPENWRT_VERSION BIG_VERSION: $BIG_VERSION"
@@ -16,15 +17,13 @@ DISTRIB_RELEASE=$OPENWRT_VERSION
 add_packages() {
     echo "try add $1"
 
-    all_supported=$(curl -ks https://downloads.openwrt.org/releases/ | grep -e "<tr.*/$1" | grep -o 'href="[0-9].*/"' | sed 's/href="//' | sed 's/\/"//' | awk '{print $1}')
-
     echo "All supported version: "
-    echo "$all_supported"
+    echo "$ALL_SUPPORTED"
 
     version=$(echo "$DISTRIB_RELEASE" | awk -F- '{print $1}')
     echo "Current version: $version"
 
-    supported=$(echo "$all_supported" | grep "$version")
+    supported=$(echo "$ALL_SUPPORTED" | grep "$version")
     feed_version="$DISTRIB_RELEASE"
 
     echo "Supported version: "
