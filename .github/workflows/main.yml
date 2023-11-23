@@ -46,11 +46,13 @@ jobs:
           PROFILE: generic.x86_64
         run: |
           # Prepare Release
-          ARTIFACTPATH="$(pwd)/image"
+          ARTIFACTPATH="$(pwd)/image/"
           mkdir -p $ARTIFACTPATH
+          cd $ARTIFACTPATH
           # Upload image
-          cd bin/targets/x86/64
-          cp * $ARTIFACTPATH
+          ls bin/targets/x86/64/ -alh
+          ls ./ -alh
+          cp bin/targets/x86/64/* ./
           git init
           git config user.name "bot"
           git config user.email "bot@github.com"
