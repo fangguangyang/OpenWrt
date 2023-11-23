@@ -46,6 +46,9 @@ jobs:
           PROFILE: generic.x86_64
         run: |
           # Prepare Release
+          pwd
+          ls ./ -alh
+          tree ./
           ARTIFACTPATH="$(pwd)/image/"
           mkdir -p $ARTIFACTPATH
           cd $ARTIFACTPATH
