@@ -49,7 +49,8 @@ jobs:
           ARTIFACTPATH="$(pwd)/image/"
           mkdir -p $ARTIFACTPATH
           # Upload image
-          cp ./bin/targets/x86/64/* $ARTIFACTPATH
+          chmod 0777 bin -R
+          cp bin/targets/x86/64/* $ARTIFACTPATH
           cd $ARTIFACTPATH
           git init
           git config user.name "bot"
