@@ -39,3 +39,25 @@ jobs:
           echo "CLASH_CONFIG_URL=https://gist.github.com/EkkoG/20a52db0169c4a4769689521b1c5500e/raw/cf61a9397d0bdbd5b6bbad8fbb388ec851116470/clash_example.yaml" >> modules/openclash/.env
           echo "MODULES=openclash openclash-as-default -statistics" > .env
           ./run.sh --image=openwrt/imagebuilder:x86-64-23.05.2
+      - name: Upload
+        id: upload
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          PROFILE: generic.x86_64
+        run: |
+          # Prepare Release
+          ARTIFACTPATH="$(pwd)/image"
+          mkdir -p $ARTIFACTPATH
+          # Upload image
+          cd bin/targets/x86/64
+          cp * $ARTIFACTPATH
+          git init
+          git config user.name "bot"
+          git config user.email "bot@github.com"
+          git add .
+          git commit -m "$PROFILE$(TZ='Asia/Shanghai' date +@%Y%m%d)"
+          git push --force --quiet "https://$GITHUB_TOKEN@github.com/fangguangyang/OpenWrt.git" HEAD:image/$PROFILE
+      - uses: actions/upload-artifact@main
+        with:
+          name: image_generic.x86_64
+          path: ./image
