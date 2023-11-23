@@ -75,7 +75,6 @@ services:
   imagebuilder:
     image: "$IMAGEBUILDER_IMAGE"
     container_name: imagebuilder
-    user: runner
     environment:
       - PROFILE=$PROFILE
       - USE_MIRROR=$USE_MIRROR
