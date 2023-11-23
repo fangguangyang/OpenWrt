@@ -45,11 +45,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
           PROFILE: generic.x86_64
         run: |
+          ls ./ -alh
           # Prepare Release
           ARTIFACTPATH="$(pwd)/image/"
           mkdir -p $ARTIFACTPATH
           # Upload image
-          chmod 0777 bin -R
           cp bin/targets/x86/64/* $ARTIFACTPATH
           cd $ARTIFACTPATH
           git init

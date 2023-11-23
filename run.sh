@@ -63,6 +63,7 @@ fi
 
 echo "IMAGEBUILDER_IMAGE: $IMAGEBUILDER_IMAGE PROFILE: $PROFILE"
 
+mkdir bin/targets -p
 if [[ $IMAGEBUILDER_IMAGE =~ "immortalwrt" ]]; then
     BUILD_DIR=/home/build/immortalwrt
 else
@@ -74,6 +75,7 @@ services:
   imagebuilder:
     image: "$IMAGEBUILDER_IMAGE"
     container_name: imagebuilder
+    user: runner
     environment:
       - PROFILE=$PROFILE
       - USE_MIRROR=$USE_MIRROR
