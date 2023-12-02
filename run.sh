@@ -17,12 +17,11 @@ function usage()
     echo "--rm-first: remove container before build"
     echo "--use-mirror: use mirror"
     echo "-h|--help: print this help"
-    exit 1
 }
 
 while [ "$1" != "" ]; do
-    PARAM=`echo $1 | awk -F= '{print $1}'`
-    VALUE=`echo $1 | awk -F= '{print $2}'`
+    PARAM=$(echo "$1" | awk -F= '{print $1}')
+    VALUE=$(echo "$1" | awk -F= '{print $2}')
     case $PARAM in
         --with-pull)
             WITH_PULL=1
@@ -61,14 +60,17 @@ if [ -z "$USE_MIRROR" ]; then
     USE_MIRROR=1
 fi
 
-echo "IMAGEBUILDER_IMAGE: $IMAGEBUILDER_IMAGE PROFILE: $PROFILE"
-
-mkdir bin/targets -p
 if [[ $IMAGEBUILDER_IMAGE =~ "immortalwrt" ]]; then
     BUILD_DIR=/home/build/immortalwrt
 else
     BUILD_DIR=/builder
 fi
+
+# shellcheck source=/dev/null
+. custom_env.sh
+
+echo "IMAGEBUILDER_IMAGE: $IMAGEBUILDER_IMAGE PROFILE: $PROFILE"
+
 docker_compose_file_content=$(cat <<-END
 version: "3.5"
 services:
@@ -92,20 +94,15 @@ END
 
 echo "$docker_compose_file_content" > docker-compose.yml
 
-if [ ! -z $WITH_PULL ]; then
+if [ -n "$WITH_PULL" ]; then
     compose pull
 fi
 
-if [ ! -z $RM_FIRST ]; then
+if [ -n "$RM_FIRST" ]; then
     compose rm -f
 fi
 
-mkdir -p bin
-# macOS no need to change the owner
-# change the owner of bin to 1000:1000 when running on linux
-if [[ $(uname) =~ "Linux" ]]; then
-    sudo chown -R 1000:1000 bin
-fi
+mkdir bin/targets -p
 
 compose up --remove-orphans
 build_status=$?
