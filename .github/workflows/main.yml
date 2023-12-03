@@ -34,9 +34,18 @@ jobs:
       - name: Build image
         run: |
           cat << EOF >> .env
+          CONFIG_TARGET_ROOTFS_EXT4FS=n
+          CONFIG_QCOW2_IMAGES=n
+          CONFIG_ISO_IMAGES=n
+          CONFIG_TARGET_IMAGES_PAD=n
+          CONFIG_VDI_IMAGES=n
+          CONFIG_VMDK_IMAGES=y
+          CONFIG_VHDX_IMAGES=n
+          CONFIG_GRUB_IMAGES=n
+          CONFIG_GRUB_CONSOLE=n
           MODULES=openclash openclash-as-default smartdns adguardhome
           EOF
-          ./run.sh --image=openwrt/imagebuilder:x86-64-23.05.2
+          ./run.sh --image=openwrt/imagebuilder:x86-64-23.05.2 --use-mirror=0
       - name: Upload
         id: upload
         env:
