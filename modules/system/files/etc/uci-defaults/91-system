@@ -1,10 +1,19 @@
 uci batch << EOF
 
+set system.@system[0]=system
+set system.@system[0].hostname='OpenWrt'
+set system.@system[0].ttylogin='0'
+set system.@system[0].log_size='64'
+set system.@system[0].urandom_seed='0'
+set system.@system[0].log_proto='udp'
+set system.@system[0].conloglevel='8'
+set system.@system[0].cronloglevel='5'
 set system.@system[0].zonename='Asia/Shanghai'
 set system.@system[0].timezone='CST-8'
-set system.@system[0].cronloglevel='8'
-set system.@system[0].conloglevel='7'
-
+set system.ntp=timeserver
+set system.ntp.server='0.openwrt.pool.ntp.org' '1.openwrt.pool.ntp.org' '2.openwrt.pool.ntp.org' '3.openwrt.pool.ntp.org'
+set system.ntp.enable_server='1'
+set system.ntp.interface='lan'
 set luci.main.lang='zh_cn'
 
 commit

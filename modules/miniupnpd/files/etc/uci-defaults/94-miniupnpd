@@ -1,0 +1,31 @@
+# uci batch << EOF
+# commit
+# EOF
+# fi
+uci batch << EOF
+
+
+set upnpd.config=upnpd
+set upnpd.config.download='1024'
+set upnpd.config.upload='512'
+set upnpd.config.internal_iface='lan'
+set upnpd.config.port='5000'
+set upnpd.config.upnp_lease_file='/var/run/miniupnpd.leases'
+set upnpd.config.igdv1='1'
+set upnpd.config.uuid='97fb423f-20fa-4c68-ac22-9d3df41b6e50'
+set upnpd.config.enabled='1'
+set upnpd.@perm_rule[0]=perm_rule
+set upnpd.@perm_rule[0].action='allow'
+set upnpd.@perm_rule[0].ext_ports='1024-65535'
+set upnpd.@perm_rule[0].int_addr='0.0.0.0/0'
+set upnpd.@perm_rule[0].int_ports='1024-65535'
+set upnpd.@perm_rule[0].comment='Allow high ports'
+set upnpd.@perm_rule[1]=perm_rule
+set upnpd.@perm_rule[1].action='deny'
+set upnpd.@perm_rule[1].ext_ports='0-65535'
+set upnpd.@perm_rule[1].int_addr='0.0.0.0/0'
+set upnpd.@perm_rule[1].int_ports='0-65535'
+set upnpd.@perm_rule[1].comment='Default deny'
+
+commit
+EOF

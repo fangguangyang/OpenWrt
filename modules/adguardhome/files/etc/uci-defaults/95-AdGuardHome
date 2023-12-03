@@ -1,0 +1,33 @@
+# uci batch << EOF
+# commit
+# EOF
+# fi
+
+mkdir -p /root/adguardhome
+mkdir -p /root/adgbackup
+
+uci batch << EOF
+
+set AdGuardHome.AdGuardHome=AdGuardHome
+set AdGuardHome.AdGuardHome.httpport='3000'
+set AdGuardHome.AdGuardHome.logfile='/tmp/AdGuardHome.log'
+set AdGuardHome.AdGuardHome.verbose='0'
+set AdGuardHome.AdGuardHome.binpath='/usr/bin/AdGuardHome'
+set AdGuardHome.AdGuardHome.configpath='/etc/adguardhome.yaml'
+set AdGuardHome.AdGuardHome.workdir='/root/adguardhome'
+set AdGuardHome.AdGuardHome.waitonboot='1'
+set AdGuardHome.AdGuardHome.backupfile='filters stats.db querylog.json sessions.db'
+set AdGuardHome.AdGuardHome.backupwdpath='/root/adgbackup'
+set AdGuardHome.AdGuardHome.hostsmd5='5504bb04bd01cb0e340aee9e2ae065b2'
+set AdGuardHome.AdGuardHome.enabled='1'
+set AdGuardHome.AdGuardHome.tagname='release'
+set AdGuardHome.AdGuardHome.ucitracktest='1'
+set AdGuardHome.AdGuardHome.redirect='dnsmasq-upstream'
+set AdGuardHome.AdGuardHome.version='0.107.38'
+set AdGuardHome.AdGuardHome.binmtime='1696396470'
+set AdGuardHome.AdGuardHome.old_redirect='dnsmasq-upstream'
+set AdGuardHome.AdGuardHome.old_port='7553'
+set AdGuardHome.AdGuardHome.old_enabled='1'
+
+commit
+EOF
