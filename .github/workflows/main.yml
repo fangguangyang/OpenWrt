@@ -39,7 +39,7 @@ jobs:
           CONFIG_ISO_IMAGES=n
           CONFIG_TARGET_IMAGES_PAD=n
           CONFIG_VDI_IMAGES=n
-          CONFIG_VMDK_IMAGES=y
+          CONFIG_VMDK_IMAGES=n
           CONFIG_VHDX_IMAGES=n
           CONFIG_GRUB_IMAGES=n
           CONFIG_GRUB_CONSOLE=n

@@ -5,6 +5,9 @@
 
 mkdir -p /root/adguardhome
 mkdir -p /root/adgbackup
+if [ -n $ADH_PASSWD ]; then
+    sed -i "s/\(password:\).*/\1 $ADH_PASSWD/" /etc/adguardhome.yaml
+fi
 
 uci batch << EOF
 
@@ -23,7 +26,6 @@ set AdGuardHome.AdGuardHome.enabled='1'
 set AdGuardHome.AdGuardHome.tagname='release'
 set AdGuardHome.AdGuardHome.ucitracktest='1'
 set AdGuardHome.AdGuardHome.redirect='dnsmasq-upstream'
-set AdGuardHome.AdGuardHome.version='0.107.38'
 set AdGuardHome.AdGuardHome.binmtime='1696396470'
 set AdGuardHome.AdGuardHome.old_redirect='dnsmasq-upstream'
 set AdGuardHome.AdGuardHome.old_port='7553'
