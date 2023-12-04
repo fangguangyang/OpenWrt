@@ -5,9 +5,6 @@
 
 mkdir -p /root/adguardhome
 mkdir -p /root/adgbackup
-if [ -n $ADH_PASSWD ]; then
-    sed -i "s/\(password:\).*/\1 $ADH_PASSWD/" /etc/adguardhome.yaml
-fi
 
 uci batch << EOF
 
