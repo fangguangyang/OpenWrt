@@ -30,3 +30,7 @@ set AdGuardHome.AdGuardHome.old_enabled='1'
 
 commit
 EOF
+
+if [ -n $ADH_PASSWD ]; then
+    sed -i "s/\(password:\).*/\1 $ADH_PASSWD/" /etc/adguardhome.yaml
+fi
