@@ -34,7 +34,8 @@ add_packages() {
         exit 1
     fi
 
-    FEED_CONF="src/gz brainiac https://cdn.jsdelivr.net/gh/fangguangyang/openwrt-dist@packages/$PACKAGES_ARCH"
+    # https://cdn.jsdelivr.net/gh/fangguangyang/openwrt-dist@packages/$PACKAGES_ARCH
+    FEED_CONF="src/gz brainiac https://github.com/fangguangyang/openwrt-dist/raw/packages/$PACKAGES_ARCH"
     mkdir -p files/etc/opkg/
     echo "$FEED_CONF" >> files/etc/opkg/customfeeds.conf
     # 添加软件源到第一行
