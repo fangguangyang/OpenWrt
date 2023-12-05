@@ -6,7 +6,7 @@ http:
   session_ttl: 720h
 users:
   - name: root
-    password: $2a$10$zzKjERHviSw/e3XxeEBHEOqJYtFE4tAAnfy1.iUM9yfYeXx/0K5Pi # passwd=123456
+    password: $2a$10$DDp.ZewovqT8ODxry7bC2ulduZ0bNlQAHkO1YCxe/AsTqq1NBS.b2 # https://bcrypt-generator.com/
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
