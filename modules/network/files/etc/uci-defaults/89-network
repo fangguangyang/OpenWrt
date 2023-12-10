@@ -32,7 +32,10 @@ set network.LANV6.proto='dhcpv6'
 set network.LANV6.device='@lan'
 set network.LANV6.reqaddress='try'
 set network.LANV6.reqprefix='auto'
-set firewall.@zone[0].network='lan' 'LANV6'
+delete network.utun
+delete firewall.@zone[0].network
+add_list firewall.@zone[0].network='lan'
+add_list firewall.@zone[0].network='LANV6'
 
 commit
 EOF

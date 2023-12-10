@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-default_modules="add-feed-key add-feed ib argon base network dhcp opkg-mirror prefer-ipv6-settings system tools resize snmpd miniupnpd firewall "
+default_modules="add-feed-key add-feed ib argon base network dhcp opkg-mirror system tools resize snmpd miniupnpd firewall"
 
 echo "Default modules: $default_modules"
 
