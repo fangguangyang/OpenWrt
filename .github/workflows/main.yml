@@ -43,7 +43,7 @@ jobs:
           CONFIG_VHDX_IMAGES=n
           CONFIG_GRUB_IMAGES=n
           CONFIG_GRUB_CONSOLE=n
-          MODULES=openclash smartdns adguardhome vmtools
+          MODULES=openclash openclash-as-default smartdns adguardhome vmtools
           EOF
           ./run.sh --image=openwrt/imagebuilder:x86-64-23.05.2 --use-mirror=0
       - name: Upload
