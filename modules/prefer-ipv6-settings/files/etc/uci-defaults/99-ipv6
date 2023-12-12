@@ -1,0 +1,7 @@
+uci batch << EOF
+
+delete network.globals.ula_prefix
+set network.globals.ula_prefix='fdd6:4872:af1f::/48'
+
+commit
+EOF
