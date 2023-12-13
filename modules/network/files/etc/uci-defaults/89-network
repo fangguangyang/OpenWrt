@@ -30,10 +30,14 @@ set network.LANV6.proto='dhcpv6'
 set network.LANV6.device='@lan'
 set network.LANV6.reqaddress='try'
 set network.LANV6.reqprefix='auto'
+set network.LANV6.peerdns='0'
 delete network.utun
 delete firewall.@zone[0].network
 add_list firewall.@zone[0].network='lan'
 add_list firewall.@zone[0].network='LANV6'
+add_list dhcp.@dnsmasq[0].interface='lan'
+add_list dhcp.@dnsmasq[0].interface='LANV6'
+add_list dhcp.@dnsmasq[0].notinterface='loopback'
 
 commit
 EOF

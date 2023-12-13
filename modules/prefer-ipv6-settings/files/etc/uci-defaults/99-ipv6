@@ -1,5 +1,7 @@
 uci batch << EOF
 
+del dhcp.@dnsmasq[0].interface
+del dhcp.@dnsmasq[0].notinterface
 del dhcp.lan
 set dhcp.lan=dhcp
 set dhcp.lan.interface='lan'
@@ -11,7 +13,7 @@ set dhcp.lan.ra='server'
 set dhcp.lan.ra_useleasetime='1'
 set dhcp.lan.preferred_lifetime='8h'
 set dhcp.lan.ra_flags='none'
-set dhcp.lan.dns_service='0'
+set dhcp.lan.dns_service='1'
 set dhcp.lan.ignore='1'
 
 commit
