@@ -45,7 +45,7 @@ jobs:
           CONFIG_GRUB_CONSOLE=n
           MODULES=openclash openclash-as-default smartdns adguardhome vmtools zte-moden
           EOF
-          ./run.sh --image=openwrt/imagebuilder:x86-64-23.05.2 --use-mirror=0
+          ./run.sh --image=openwrt/imagebuilder:x86-64-${{ vars.OPENWRT_VERSION }} --use-mirror=0
       - name: Upload
         id: upload
         env:
