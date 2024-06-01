@@ -1,0 +1,6 @@
+#!/bin/bash
+
+CRON_FILE="/etc/crontabs/root"
+if ! grep -q "zte_moden" "$CRON_FILE"; then
+    echo '*/10 * * * * /etc/init.d/zte_moden update_zte_date' >>"$CRON_FILE"
+fi

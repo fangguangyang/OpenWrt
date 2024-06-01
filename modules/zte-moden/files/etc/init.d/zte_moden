@@ -1,0 +1,33 @@
+#!/bin/bash
+
+param="$1"
+
+update_zte_date() {
+    date=$(date -u +"%Y-%m-%d %H:%M:%S")
+
+    (
+        sleep 1
+        echo -e 'root\nZte521'
+        sleep 1
+        echo "date -u -s '$date'"
+        sleep 1
+        exit
+    ) | telnet 192.168.1.1
+
+    return 0
+}
+
+main() {
+    echo "...zte moden..."
+    case "$param" in
+    "update_zte_date")
+        update_zte_date
+        ;;
+    *)
+        echo "nothing to do"
+        return 0
+        ;;
+    esac
+}
+
+main
