@@ -16,6 +16,7 @@ function usage()
     echo "--with-pull: pull image before build"
     echo "--rm-first: remove container before build"
     echo "--use-mirror: use mirror"
+    echo "--mirror: specify mirror url, like mirrors.jlu.edu.cn, do not add http:// or https://"
     echo "-h|--help: print this help"
 }
 
@@ -31,6 +32,9 @@ while [ "$1" != "" ]; do
             ;;
         --use-mirror)
             USE_MIRROR=$VALUE
+            ;;
+        --mirror)
+            MIRROR=$VALUE
             ;;
         --profile)
             PROFILE=$VALUE
@@ -60,6 +64,12 @@ if [ -z "$USE_MIRROR" ]; then
     USE_MIRROR=1
 fi
 
+if [ -z "$MIRROR" ]; then
+    MIRROR="mirrors.pku.edu.cn"
+fi
+
+echo "IMAGEBUILDER_IMAGE: $IMAGEBUILDER_IMAGE PROFILE: $PROFILE"
+
 if [[ $IMAGEBUILDER_IMAGE =~ "immortalwrt" ]]; then
     BUILD_DIR=/home/build/immortalwrt
 else
@@ -80,12 +90,14 @@ services:
     environment:
       - PROFILE=$PROFILE
       - USE_MIRROR=$USE_MIRROR
+      - MIRROR=$MIRROR
     env_file:
       - ./.env
     volumes:
       - ./bin:$BUILD_DIR/bin
       - ./build.sh:$BUILD_DIR/build.sh
-      - ./modules:$BUILD_DIR/custom_modules
+      - ./modules:$BUILD_DIR/modules_in_container
+      - ./user_modules:$BUILD_DIR/user_modules_in_container
       - ./.env:$BUILD_DIR/.env
     command: "./build.sh"
 END
@@ -109,13 +121,13 @@ if [[ $(uname) =~ "Linux" ]]; then
     sudo chown -R 1000:1000 bin
 fi
 
-compose up --remove-orphans
+compose up --exit-code-from imagebuilder --remove-orphans
 build_status=$?
 compose rm -f
 rm docker-compose.yml
 
 if [ $build_status -ne 0 ]; then
-    echo "build failed"
+    echo "build failed with exit code $build_status"
     exit 1
 else
     ls -R bin

@@ -5,6 +5,6 @@ mkdir -p files/etc/openclash/core
 wget https://github.com/vernesong/OpenClash/raw/core/master/dev/clash-linux-amd64.tar.gz -O dev.tar.gz
 tar -xzf dev.tar.gz
 mv clash files/etc/openclash/core/
-wget https://github.com/vernesong/OpenClash/raw/core/master/meta/clash-linux-amd64.tar.gz -O meta.tar.gz
-tar -xzf meta.tar.gz
-mv clash files/etc/openclash/core/clash_meta
+
+. ./modules/add-feed-base/base.sh
+add_packages "mihomo"
