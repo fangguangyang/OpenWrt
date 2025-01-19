@@ -1,11 +1,9 @@
 #!/bin/bash
 
 {
-    #echo "PPPOE_USERNAME=123"
-    #echo "PPPOE_PASSWORD=123"
     echo "LAN_IP=192.168.30.13"
     echo "GATEWAY_IP=192.168.30.11"
-} >> modules/network/.env
+} >> modules/lan/.env
 
 {
     echo "ADH_PASSWD=$2a$10$DDp.ZewovqT8ODxry7bC2ulduZ0bNlQAHkO1YCxe/AsTqq1NBS.b2"
