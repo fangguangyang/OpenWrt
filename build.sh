@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-default_modules="add-all-device-to-lan add-feed-key add-feed ib argon base dhcp opkg-mirror prefer-ipv6-settings system tools resize snmpd miniupnpd firewall"
+default_modules="add-feed-key add-feed ib argon base dhcp opkg-mirror prefer-ipv6-settings system tools resize snmpd miniupnpd firewall"
 
 LOG() {
     # echo when $LOG_ENABLE set to 1

@@ -1,4 +1,3 @@
-
 uci batch << EOF
 
 set network.lan.ipaddr='$LAN_IP'
