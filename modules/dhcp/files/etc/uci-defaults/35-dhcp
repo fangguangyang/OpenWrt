@@ -4,24 +4,6 @@
 # fi
 uci batch << EOF
 
-set dhcp.@dnsmasq[0]=dnsmasq
-set dhcp.@dnsmasq[0].domainneeded='1'
-set dhcp.@dnsmasq[0].localise_queries='1'
-set dhcp.@dnsmasq[0].rebind_protection='1'
-set dhcp.@dnsmasq[0].rebind_localhost='1'
-set dhcp.@dnsmasq[0].local='/lan/'
-set dhcp.@dnsmasq[0].domain='lan'
-set dhcp.@dnsmasq[0].expandhosts='1'
-set dhcp.@dnsmasq[0].authoritative='1'
-set dhcp.@dnsmasq[0].readethers='1'
-set dhcp.@dnsmasq[0].leasefile='/tmp/dhcp.leases'
-set dhcp.@dnsmasq[0].localservice='1'
-set dhcp.@dnsmasq[0].ednspacket_max='1232'
-set dhcp.@dnsmasq[0].confdir='/tmp/dnsmasq.d'
-set dhcp.@dnsmasq[0].cachesize='0'
-set dhcp.@dnsmasq[0].port='53'
-set dhcp.@dnsmasq[0].server='127.0.0.1#7553'
-set dhcp.@dnsmasq[0].noresolv='1'
 set dhcp.lan=dhcp
 set dhcp.lan.interface='lan'
 set dhcp.lan.start='100'
@@ -44,6 +26,25 @@ set dhcp.odhcpd.loglevel='4'
 set dhcp.LANV6=dhcp
 set dhcp.LANV6.interface='LANV6'
 set dhcp.LANV6.ignore='1'
+
+set dhcp.@dnsmasq[0]=dnsmasq
+set dhcp.@dnsmasq[0].domainneeded='1'
+set dhcp.@dnsmasq[0].localise_queries='1'
+set dhcp.@dnsmasq[0].rebind_protection='1'
+set dhcp.@dnsmasq[0].rebind_localhost='1'
+set dhcp.@dnsmasq[0].local='/lan/'
+set dhcp.@dnsmasq[0].domain='lan'
+set dhcp.@dnsmasq[0].expandhosts='1'
+set dhcp.@dnsmasq[0].authoritative='1'
+set dhcp.@dnsmasq[0].readethers='1'
+set dhcp.@dnsmasq[0].leasefile='/tmp/dhcp.leases'
+set dhcp.@dnsmasq[0].localservice='1'
+set dhcp.@dnsmasq[0].ednspacket_max='1232'
+set dhcp.@dnsmasq[0].confdir='/tmp/dnsmasq.d'
+set dhcp.@dnsmasq[0].cachesize='0'
+set dhcp.@dnsmasq[0].port='53'
+set dhcp.@dnsmasq[0].server='127.0.0.1#7553'
+set dhcp.@dnsmasq[0].noresolv='1'
 
 commit
 EOF
