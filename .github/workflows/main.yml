@@ -49,7 +49,7 @@ jobs:
           CONFIG_VHDX_IMAGES=n
           CONFIG_GRUB_IMAGES=n
           CONFIG_GRUB_CONSOLE=n
-          MODULES=openclash smartdns adguardhome vmtools zte-moden
+          MODULES=lan openclash smartdns adguardhome vmtools zte-moden
           EOF
           ./run.sh --image=openwrt/imagebuilder:x86-64-${{ vars.OPENWRT_VERSION }} --use-mirror=0
       - name: Upload
