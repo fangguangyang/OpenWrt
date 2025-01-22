@@ -76,9 +76,6 @@ else
     BUILD_DIR=/builder
 fi
 
-# shellcheck source=/dev/null
-. custom_env.sh
-
 echo "IMAGEBUILDER_IMAGE: $IMAGEBUILDER_IMAGE PROFILE: $PROFILE"
 
 docker_compose_file_content=$(cat <<-END

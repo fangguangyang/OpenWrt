@@ -182,10 +182,6 @@ user_rules:
   - '@@||connect.rom.miui.com^$important'
   - '@@||update.miui.com^$important'
   - '@@||data.mistat.xiaomi.com^$important'
-  - '@@||parallels.com^$important'
-  - '@@||parallels.cn^$important'
-  - '@@||parallels.com.cdn.cloudflare.net^$important'
-  - '@@||myparallels.com^$important'
   - ""
 dhcp:
   enabled: false

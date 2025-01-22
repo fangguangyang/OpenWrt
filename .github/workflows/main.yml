@@ -34,6 +34,10 @@ jobs:
       - name: Build image
         run: |
           cat << EOF >> .env
+          LAN_IP=192.168.30.13
+          GATEWAY_IP=192.168.30.1
+          ADH_PASSWD=$2a$10$DDp.ZewovqT8ODxry7bC2ulduZ0bNlQAHkO1YCxe/AsTqq1NBS.b2
+          CLASH_CONFIG_URL=https://gist.github.com/EkkoG/20a52db0169c4a4769689521b1c5500e/raw/cf61a9397d0bdbd5b6bbad8fbb388ec851116470/clash_example.yaml
           CONFIG_TARGET_KERNEL_PARTSIZE=16
           CONFIG_TARGET_ROOTFS_PARTSIZE=256
           CONFIG_TARGET_ROOTFS_EXT4FS=n
