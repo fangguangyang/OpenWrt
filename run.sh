@@ -78,6 +78,9 @@ fi
 
 echo "IMAGEBUILDER_IMAGE: $IMAGEBUILDER_IMAGE PROFILE: $PROFILE"
 
+# shellcheck source=/dev/null
+. custom_env.sh
+
 docker_compose_file_content=$(cat <<-END
 version: "3.5"
 services:
