@@ -1,0 +1,6 @@
+8339a8ffdc239317b93486d8e3f50952fd325413ee053628bb90b7b7bdd969c0 *openwrt-23.05.5-x86-64-generic-kernel.bin
+cfa8e881ae3462ee2b122b9e69377608ee3def271f6b29c6bc62f7c2d7da2d26 *openwrt-23.05.5-x86-64-generic-rootfs.tar.gz
+d91d74e5204d729e8dabe1c5d9aad47bdf9d296c5d8a2b3878108f597e521530 *openwrt-23.05.5-x86-64-generic-squashfs-combined-efi.img.gz
+a90193ab5d05b69139013cee8ec907fd09801ec5a10d8b96f9ae7b457537b129 *openwrt-23.05.5-x86-64-generic-squashfs-rootfs.img.gz
+91f9cd75e18fe0a2af8160ca85dd0f1bfc23f231cf34f4bdb75d399973d9d880 *openwrt-23.05.5-x86-64-generic.manifest
+a305dade76ed468116d67010049d69aae7a9441e333fae8031043c97348007b5 *profiles.json
