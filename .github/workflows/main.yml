@@ -49,8 +49,6 @@ jobs:
 
       - name: Prepare Artifacts
         id: prepare-artifacts
-        env:
-          PROFILE: generic.x86_64
         run: |
           ARTIFACTPATH="$(pwd)/image/"
           mkdir -p $ARTIFACTPATH
@@ -68,8 +66,8 @@ jobs:
             Auto-generated OpenWrt Build
             
             **Details**
-            - Profile: ${{ env.PROFILE }}
-            - Build Date: ${{ steps.get-date.outputs.date }}
+            - Profile: generic.x86_64
+            - Build Date: ${{ steps.prepare-artifacts.outputs.date }}
             - Commit: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
           prerelease: true
           draft: false
