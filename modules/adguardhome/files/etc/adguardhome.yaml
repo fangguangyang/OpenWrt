@@ -131,7 +131,7 @@ filters:
     url: https://raw.githubusercontent.com/BlueSkyXN/AdGuardHomeRules/master/all.txt
     name: 百万ADH广告拦截过滤规则
     id: 1654791531
-  - enabled: true
+  - enabled: false
     url: https://raw.githubusercontent.com/Ewpratten/youtube_ad_blocklist/master/blocklist.txt
     name: Youtube去广告
     id: 1654791532
@@ -139,31 +139,31 @@ filters:
     url: https://cdn.jsdelivr.net/gh/o0HalfLife0o/list@master/ad.txt
     name: HalfLife
     id: 1656240799
-  - enabled: true
+  - enabled: false
     url: https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt
     name: EasyList Anti
     id: 1656240800
-  - enabled: true
+  - enabled: false
     url: https://easylist-downloads.adblockplus.org/i_dont_care_about_cookies.txt
     name: IDONOTCARECOOKIE
     id: 1670431945
-  - enabled: true
+  - enabled: false
     url: https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt
     name: NO COIN
     id: 1670431946
-  - enabled: true
+  - enabled: false
     url: https://cdn.adblockcdn.com/filters/adblock_custom.txt
     name: adblock_custom
     id: 1670431947
-  - enabled: true
+  - enabled: false
     url: https://easylist-downloads.adblockplus.org/antiadblockfilters.txt
     name: antiadblockfilters
     id: 1670431948
-  - enabled: true
+  - enabled: false
     url: https://blocklistproject.github.io/Lists/adguard/redirect-ags.txt
     name: redirect-ags
     id: 1670431949
-  - enabled: true
+  - enabled: false
     url: https://blocklistproject.github.io/Lists/adguard/ads-ags.txt
     name: ads-ags
     id: 1670431950
