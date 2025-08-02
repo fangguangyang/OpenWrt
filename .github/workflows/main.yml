@@ -45,7 +45,7 @@ jobs:
           CONFIG_GRUB_CONSOLE=n
           MODULES=lan openclash smartdns adguardhome vmtools zte-moden
           EOF
-          ./run.sh --image=openwrt/imagebuilder:x86-64-${{ vars.OPENWRT_VERSION }} --use-mirror=0
+          ./run.sh --image=openwrt/imagebuilder:x86-64-${{ vars.OPENWRT_VERSION }} --use-mirror=0 --rm-first
 
       - name: Prepare Artifacts
         id: prepare-artifacts
