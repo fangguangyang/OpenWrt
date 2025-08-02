@@ -12,10 +12,12 @@ add_packages() {
     # 添加软件源到第一行
     echo "$EKKOG_FEED" | cat - ./repositories.conf > temp && mv temp ./repositories.conf
 
-    FEED_CONF="src/gz brainiac https://github.com/fangguangyang/openwrt-dist/raw/packages/$PACKAGES_ARCH"
-    echo "$FEED_CONF" >> files/etc/opkg/customfeeds.conf
-    # 添加软件源到第一行
-    echo "$FEED_CONF" | cat - ./repositories.conf > temp && mv temp ./repositories.conf
+    if [ $1 = packages ]; then
+        FEED_CONF="src/gz brainiac https://github.com/fangguangyang/openwrt-dist/raw/packages/$PACKAGES_ARCH"
+        echo "$FEED_CONF" >> files/etc/opkg/customfeeds.conf
+        # 添加软件源到第一行
+        echo "$FEED_CONF" | cat - ./repositories.conf > temp && mv temp ./repositories.conf
+    fi 
 }
 
 add_geodata() {

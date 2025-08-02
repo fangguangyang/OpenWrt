@@ -135,7 +135,7 @@ LOG ""
 make info
 cat ./repositories.conf
 if [ -z "$PROFILE" ]; then
-    make image PACKAGES="$all_packages" FILES="files"
+    make image PACKAGES="$all_packages" FILES="files" -S
 else
-    make PROFILE="$PROFILE" image PACKAGES="$all_packages" FILES="files"
+    make PROFILE="$PROFILE" image PACKAGES="$all_packages" FILES="files" -S
 fi
