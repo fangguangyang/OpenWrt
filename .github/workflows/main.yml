@@ -52,7 +52,13 @@ jobs:
           cp bin/targets/x86/64/* $ARTIFACTPATH
           echo "ARTIFACTPATH=$ARTIFACTPATH" >> $GITHUB_OUTPUT
           echo "date=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
-
+      - name: Delete old nightly release
+        if: github.event_name == 'push'
+        run: |
+          gh release delete nightly --yes || true
+          git push origin :refs/tags/nightly || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
