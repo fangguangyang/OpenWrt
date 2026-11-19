@@ -22,7 +22,7 @@
 | 已挂载分区 | GNU Parted 的 `--script` 模式不能确认正在使用的分区；改为受控提供确认，再独立读取分区表核验结果 |
 | 文件系统生成 | 实测原 `make_ext4fs` 根镜像存在 bitmap padding 异常，大幅扩容后出现 resize inode 大小异常；M28C 改用 ImageBuilder 自带 e2fsprogs 生成，并在封装前运行完整检查 |
 | 文件系统扩展 | 重启读取新分区大小后运行 `resize2fs`，再检查 ext4 块数；成功才记录标记，后续开机跳过 |
-| OpenClash 核心 | 新构建没有运行旧 modules 的下载步骤，原来只安装了界面；现按目标 CPU 内置 Meta 核心，校验 Git blob、大小、ELF 架构并记录来源与 SHA256 |
+| OpenClash 核心 | 按目标 CPU 从固定上游 commit 直接下载并内置 Meta 核心，校验归档 SHA256 和 ELF 架构，记录来源与哈希 |
 | DNS/代理启动 | OpenClash、AdGuardHome、MosDNS、SmartDNS 默认停用；保留 dnsmasq 的基础 DHCP/DNS，等配置订阅或 DNS 规则后再启用 |
 | LAN 地址 | 实际 profile 为 `192.168.60.1`，修正文档之前写成参考仓库 `192.168.6.1` 的不一致 |
 

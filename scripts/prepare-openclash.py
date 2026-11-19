@@ -5,10 +5,17 @@ import hashlib
 import io
 import json
 from pathlib import Path
-import re
 import tarfile
 
 from release import fetch
+
+
+# Record both archive hashes together whenever updating the upstream commit.
+CORE_COMMIT = '5606dc41ab4bdf11471a6d74e6518a634a2e3e9d'
+CORE_ARCHIVES = {
+    'amd64': '61ebc9ace8483678a94e3d9ba328415fac1f88864f2b5c4d9bbff0557fc1038f',
+    'arm64': 'aae510c46001b8784b1480be94c3c740db9b387e5419604abaafa4189cd99c6d',
+}
 
 
 def unpack(data, machine):
@@ -31,24 +38,19 @@ def prepare(arch, files, provenance):
         flavor, machine = 'arm64', 183
     else:
         raise ValueError('Unsupported OpenClash core architecture: ' + arch)
-    api = 'https://api.github.com/repos/vernesong/OpenClash'
-    commit = json.loads(fetch(api + '/commits/core'))['sha']
-    if not re.fullmatch(r'[0-9a-f]{40}', commit):
-        raise ValueError('Invalid OpenClash core commit')
-    path = f'master/meta/clash-linux-{flavor}.tar.gz'
-    entry = json.loads(fetch(f'{api}/contents/{path}?ref={commit}'))
-    url = f'https://raw.githubusercontent.com/vernesong/OpenClash/{commit}/{path}'
+    url = f'https://raw.githubusercontent.com/vernesong/OpenClash/{CORE_COMMIT}/master/meta/clash-linux-{flavor}.tar.gz'
     data = fetch(url)
+    archive_sha256 = hashlib.sha256(data).hexdigest()
+    if archive_sha256 != CORE_ARCHIVES[flavor]:
+        raise ValueError(f'OpenClash {flavor} core archive SHA256 mismatch at {CORE_COMMIT}')
     blob = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
-    if entry['sha'] != blob or entry['size'] != len(data):
-        raise ValueError('OpenClash core archive does not match the pinned Git blob')
     binary = unpack(data, machine)
     destination = files / 'etc/openclash/core/clash_meta'
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(binary)
     destination.chmod(0o755)
-    provenance.write_text(json.dumps(dict(url=url, commit=commit, arch=arch, git_blob=blob,
-                                          archive_sha256=hashlib.sha256(data).hexdigest(),
+    provenance.write_text(json.dumps(dict(url=url, commit=CORE_COMMIT, arch=arch, git_blob=blob,
+                                          archive_sha256=archive_sha256,
                                           executable_sha256=hashlib.sha256(binary).hexdigest()), indent=2) + '\n')
 
 

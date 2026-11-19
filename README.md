@@ -40,7 +40,7 @@
 - M28C 集成 FM350 USB 的 RNDIS/CDC、串口驱动、`xmm-modem`、`luci-proto-xmm` 和 `luci-app-3ginfo-lite`。拨号组件采用 [modemfeed 当前包名](https://github.com/koshev-msk/modemfeed/tree/master/packages/net/xmm-modem)，对应旧教程里的 `fm350-modem` / `luci-proto-fm350`。自动配置流程见下文。
 - M28C Wi-Fi 默认启用，按实际 radio 的 band 命名为 `Widora_5G` / `Widora_2.4G`，密码为 `password123`；可在 `profiles/m28c/files/usr/sbin/m28c-wifi-defaults` 修改。支持驱动延迟加载，不假定存在两张 radio；初始化标记可防止后续开机覆盖手工 Wi-Fi 设置。
 - amd64 保留 LAN `192.168.30.13` / 网关 `192.168.30.11`，使用 Argon 主题，默认安装 VMware 的 `open-vm-tools`。PVE/KVM 用户可在 `profiles/amd64/packages` 中将其替换为 `qemu-ga`；两者都安装 `/sbin/shutdown`，必须二选一。
-- OpenClash、AdGuardHome、MosDNS 使用对应架构的软件。OpenClash Meta 核心在构建时直接内置，固定到下载时的上游 commit，校验 Git blob 和 ELF CPU 架构，记录在 `openclash-core.json`。代理订阅与附加 DNS 服务默认停用，基础 DHCP/DNS 使用 dnsmasq；在 LuCI 中配置后可启用相应服务。
+- OpenClash、AdGuardHome、MosDNS 使用对应架构的软件。构建从 `scripts/prepare-openclash.py` 指定的上游 commit 直接下载 OpenClash Meta 核心，校验归档 SHA256 和 ELF CPU 架构，记录在 `openclash-core.json`。更新核心时同时更新 commit 和两种架构的归档 SHA256。代理订阅与附加 DNS 服务默认停用，基础 DHCP/DNS 使用 dnsmasq。可在 LuCI 中配置后启用相应服务。
 
 ### M28C + FM350-GL（USB 转接）
 
@@ -84,7 +84,7 @@ python3 scripts/release.py feeds --metadata release.json --output package-feeds.
 bash scripts/build-image.sh /tmp/build.json 'https://github.com/fangguangyang/openwrt-dist/releases/download/<tag>'
 ```
 
-本地使用 Linux/Python 3.11+ 及 ImageBuilder 的构建依赖。完整构建在 GitHub Actions 中执行。
+本地使用 Linux/Python 3.11+ 及 ImageBuilder 的构建依赖。构建 amd64 时也需要 `qemu-utils` 和 `genisoimage`，用于生成虚拟磁盘和 ISO。GitHub Actions 会自动安装这些依赖。
 
 ## 旧版 Docker / modules 使用方式
 
