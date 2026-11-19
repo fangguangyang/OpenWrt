@@ -1,6 +1,8 @@
 #!/bin/sh
 # Based on Widora-M28C-Build/diy-part2.sh. M28C uses RK3528.
-uci set network.lan.ipaddr='192.168.60.1'
+# Keep the CIDR prefix from the generated LAN configuration format.
+uci -q delete network.lan.ipaddr
+uci add_list network.lan.ipaddr='192.168.60.1/24' || exit 1
 uci set system.@system[0].zonename='Asia/Shanghai'
 uci set system.@system[0].timezone='CST-8'
 uci set luci.main.mediaurlbase='/luci-static/design'
