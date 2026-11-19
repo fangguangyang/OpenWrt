@@ -1,3 +1,4 @@
 luci-theme-argon
-qemu-ga
+# Guest agents both own /sbin/shutdown: install exactly one.
+# Keep the original VMware default; replace with qemu-ga for PVE/KVM.
 open-vm-tools

@@ -39,7 +39,7 @@
 - M28C 参考 `Widora-M28C-Build`：本仓库 LAN 为 `192.168.60.1`、Design 主题、QMI/MBIM、Modemband、SMS Tool、PWM 风扇、iStore 和 QuickStart。保留官方设备 profile 的 AIC8800 SDIO/Wi-Fi 驱动默认项。
 - M28C 集成 FM350 USB 的 RNDIS/CDC、串口驱动、`xmm-modem`、`luci-proto-xmm` 和 `luci-app-3ginfo-lite`。拨号组件采用 [modemfeed 当前包名](https://github.com/koshev-msk/modemfeed/tree/master/packages/net/xmm-modem)，对应旧教程里的 `fm350-modem` / `luci-proto-fm350`。自动配置流程见下文。
 - M28C Wi-Fi 默认启用，按实际 radio 的 band 命名为 `Widora_5G` / `Widora_2.4G`，密码为 `password123`；可在 `profiles/m28c/files/usr/sbin/m28c-wifi-defaults` 修改。支持驱动延迟加载，不假定存在两张 radio；初始化标记可防止后续开机覆盖手工 Wi-Fi 设置。
-- amd64 保留 LAN `192.168.30.13` / 网关 `192.168.30.11`，使用 Argon 主题和虚拟机工具。
+- amd64 保留 LAN `192.168.30.13` / 网关 `192.168.30.11`，使用 Argon 主题，默认安装 VMware 的 `open-vm-tools`。PVE/KVM 用户可在 `profiles/amd64/packages` 中将其替换为 `qemu-ga`；两者都安装 `/sbin/shutdown`，必须二选一。
 - OpenClash、AdGuardHome、MosDNS 使用对应架构的软件。OpenClash Meta 核心在构建时直接内置，固定到下载时的上游 commit，校验 Git blob 和 ELF CPU 架构，记录在 `openclash-core.json`。代理订阅与附加 DNS 服务默认停用，基础 DHCP/DNS 使用 dnsmasq；在 LuCI 中配置后可启用相应服务。
 
 ### M28C + FM350-GL（USB 转接）
