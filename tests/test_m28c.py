@@ -1,77 +1,12 @@
 import importlib.util
 from pathlib import Path
 import os
-import shutil
 import subprocess
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ROOT / 'profiles/m28c/files'
-
-
-class UsbDetectionTests(unittest.TestCase):
-    def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
-        self.sys = self.root / 'sys'
-        self.helper = self.root / 'fm350.sh'
-        self.helper.write_text((FILES / 'lib/functions/fm350.sh').read_text().replace('/sys/', str(self.sys) + '/'))
-
-    def usb(self, product='7127', interface='06', port='ttyUSB9', net='enx012345', driver='rndis_host'):
-        usb = self.sys / 'devices/usb1/1-1'
-        usb.mkdir(parents=True, exist_ok=True)
-        (usb / 'idVendor').write_text('0e8d\n')
-        (usb / 'idProduct').write_text(product + '\n')
-        control = usb / ('1-1:1.' + str(int(interface, 16)))
-        control.mkdir(exist_ok=True)
-        (control / 'bInterfaceNumber').write_text(interface + '\n')
-        tty = control / port if port.startswith('ttyUSB') else control
-        tty.mkdir(exist_ok=True)
-        entry = self.sys / 'class/tty' / port
-        entry.mkdir(parents=True)
-        (entry / 'device').symlink_to(tty)
-        data = usb / '1-1:1.0'
-        netdir = data / 'net' / net
-        netdir.mkdir(parents=True, exist_ok=True)
-        (netdir / 'device').symlink_to(data)
-        drv = self.sys / 'bus/usb/drivers' / driver
-        drv.mkdir(parents=True, exist_ok=True)
-        (data / 'driver').symlink_to(drv)
-        return usb
-
-    def detect(self):
-        return subprocess.run(['sh', '-c', '. "$1"; fm350_find || exit 1; printf "%s %s" "$FM350_PORT" "$FM350_NET"',
-                               'sh', str(self.helper)], text=True, capture_output=True)
-
-    def test_both_usb_products_follow_interface_number_and_not_tty_index(self):
-        for product, interface in [('7126', '04'), ('7127', '06')]:
-            with self.subTest(product=product):
-                shutil.rmtree(self.sys, ignore_errors=True)
-                self.usb(product, interface)
-                result = self.detect()
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(result.stdout, '/dev/ttyUSB9 enx012345')
-
-    def test_acm_sysfs_depth_is_supported(self):
-        self.usb(port='ttyACM3')
-        self.assertEqual(self.detect().stdout, '/dev/ttyACM3 enx012345')
-
-    def test_debug_ports_unknown_models_and_unbound_networks_are_ignored(self):
-        for product, interface, driver in [('7127', '04', 'rndis_host'), ('0001', '06', 'rndis_host'),
-                                           ('7127', '06', 'unknown')]:
-            with self.subTest(product=product, interface=interface, driver=driver):
-                shutil.rmtree(self.sys, ignore_errors=True)
-                self.usb(product, interface, driver=driver)
-                self.assertNotEqual(self.detect().returncode, 0)
-
-    def test_multiple_data_interfaces_are_not_guessed(self):
-        usb = self.usb()
-        netdir = usb / '1-1:1.0/net/usb1'
-        netdir.mkdir()
-        (netdir / 'device').symlink_to(usb / '1-1:1.0')
-        self.assertNotEqual(self.detect().returncode, 0)
 
 
 class GrowRootTests(unittest.TestCase):
@@ -204,19 +139,14 @@ esac
         self.assertNotIn('parted ', self.call_text())
 
 
-class ProtocolPatchTests(unittest.TestCase):
-    def test_upstream_drift_fails_instead_of_emitting_an_unpatched_firmware(self):
+class QModemVerificationTests(unittest.TestCase):
+    def test_missing_qmodem_fails_before_preparing_the_image(self):
         spec = importlib.util.spec_from_file_location('prepare_m28c', ROOT / 'scripts/prepare-m28c.py')
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            protocol = root / 'build_dir/target-test/root-rockchip/lib/netifd/proto/xmm.sh'
-            protocol.parent.mkdir(parents=True)
-            protocol.write_text('new upstream implementation\n')
-            with self.assertRaisesRegex(ValueError, 'changed upstream'):
-                module.prepare(root, root / 'files')
-            self.assertFalse((root / 'files').exists())
+            with self.assertRaisesRegex(ValueError, 'installed QModem modem support table'):
+                module.prepare(Path(directory))
 
 
 if __name__ == '__main__':

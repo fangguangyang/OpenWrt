@@ -1,1 +1,0 @@
-luci-app-openclash clash-meta-for-openclash bash dnsmasq-full curl ca-bundle ip-full ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base

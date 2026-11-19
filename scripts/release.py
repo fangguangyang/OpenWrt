@@ -83,12 +83,13 @@ def resolve(distro, requested, devices):
         profiles = json.loads(fetch(directory + "profiles.json"))
         if profile not in profiles["profiles"]:
             raise ValueError(f"{distro} {version} has no {profile} profile; M28C requires ImmortalWrt")
+        if not any(p.startswith("apk-") for p in profiles["default_packages"]):
+            raise ValueError(f"{distro} {version} {target} does not use APK. Select an APK release.")
         sums = checksums(fetch(directory + "sha256sums").decode())
-        pm = "apk" if any(p.startswith("apk-") for p in profiles["default_packages"]) else "opkg"
         branch = ("master" if distro == "immortalwrt" else "main") if version == "SNAPSHOT" else "openwrt-" + ".".join(version.split(".")[:2])
         matrix.append({
             "id": device, "distro": distro, "version": version, "target": target,
-            "profile": profile, "arch": profiles["arch_packages"], "package_manager": pm,
+            "profile": profile, "arch": profiles["arch_packages"], "package_manager": "apk",
             "source_branch": branch, "directory": directory,
             "sdk": archive(sums, distro, "sdk"),
             "imagebuilder": archive(sums, distro, "imagebuilder"),
@@ -113,6 +114,8 @@ def package_feed_url(metadata, repository):
 
 
 def validate_feed(expected, actual, feed_url):
+    if expected.get("package_manager") != "apk":
+        raise ValueError("Firmware builds require APK metadata")
     if actual.get("feed_url") != feed_url:
         raise ValueError("Package feed metadata does not match its Release URL")
     for key in ("distro", "version", "target", "arch", "package_manager", "version_code"):
@@ -131,12 +134,13 @@ def check_asset(url):
 def resolve_feeds(matrix, repository):
     result = {}
     for metadata in matrix["include"]:
+        if metadata.get("package_manager") != "apk":
+            raise ValueError("Firmware builds require APK metadata")
         url = package_feed_url(metadata, repository)
         try:
             actual = json.loads(fetch(url + "/build.json"))
             validate_feed(metadata, actual, url)
-            assets = ("packages.adb", "feed-key.pem") if metadata["package_manager"] == "apk" else ("Packages.gz", "Packages.sig", "feed-key.pub")
-            for name in assets:
+            for name in ("packages.adb", "feed-key.pem"):
                 check_asset(url + "/" + name)
         except HTTPError as error:
             if error.code == 404:

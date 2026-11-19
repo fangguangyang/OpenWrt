@@ -1,0 +1,140 @@
+package smartdns
+
+config smartdns
+	option enabled '0'
+	option port '6053'
+	option tcp_server '1'
+	option dualstack_ip_selection '1'
+	option prefetch_domain '1'
+	option seconddns_port '6553'
+	option seconddns_tcp_server '1'
+	option server_name 'smartdns-cn'
+	option seconddns_server_group 'smartdns-us'
+	option seconddns_enabled '1'
+	option ipv6_server '1'
+	option auto_set_dnsmasq '0'
+	option resolve_local_hostnames '1'
+	option force_https_soa '1'
+	option serve_expired '1'
+	option cache_size '16384'
+	option rr_ttl_max '3600'
+	option rr_ttl_min '600'
+	option rr_ttl_reply_max '600'
+	option bind_device '1'
+	option cache_persist '1'
+	option old_port '6053'
+	option old_enabled '0'
+	option old_auto_set_dnsmasq '0'
+
+config domain-rule
+
+config server
+	option enabled '1'
+	option name '114'
+	option ip '114.114.114.114'
+	option type 'udp'
+	option blacklist_ip '0'
+	option server_group 'smartdns-cn'
+
+config server
+	option enabled '1'
+	option name 'ali'
+	option ip '223.5.5.5'
+	option type 'udp'
+	option blacklist_ip '0'
+	option server_group 'smartdns-cn'
+
+config server
+	option enabled '1'
+	option name 'tencent'
+	option ip '119.29.29.29'
+	option type 'udp'
+	option blacklist_ip '0'
+	option server_group 'smartdns-cn'
+
+config server
+	option enabled '1'
+	option name 'baidu'
+	option ip '180.76.76.76'
+	option type 'udp'
+	option blacklist_ip '0'
+	option server_group 'smartdns-cn'
+
+config server
+	option enabled '1'
+	option name 'google'
+	option blacklist_ip '0'
+	option ip 'dns.google/dns-query'
+	option type 'https'
+	option server_group 'smartdns-us'
+	option exclude_default_group '1'
+
+config server
+	option enabled '1'
+	option name 'google'
+	option blacklist_ip '0'
+	option type 'udp'
+	option server_group 'smartdns-us'
+	option exclude_default_group '1'
+	option ip '8.8.8.8'
+
+config server
+	option enabled '1'
+	option name 'opendns'
+	option blacklist_ip '0'
+	option ip 'doh.opendns.com/dns-query'
+	option type 'https'
+	option server_group 'smartdns-us'
+	option exclude_default_group '1'
+
+config server
+	option enabled '1'
+	option name 'dnspai'
+	option ip '101.226.4.6'
+	option type 'udp'
+	option blacklist_ip '0'
+	option server_group 'smartdns-cn'
+
+config server
+	option enabled '1'
+	option name 'Cloudflare'
+	option blacklist_ip '0'
+	option ip 'dns.cloudflare.com/dns-query'
+	option type 'https'
+	option server_group 'smartdns-us'
+	option exclude_default_group '1'
+
+config server
+	option enabled '1'
+	option name 'ali-ipv6'
+	option ip '2400:3200::1'
+	option type 'udp'
+	option server_group 'smartdns-cn'
+	option blacklist_ip '0'
+
+config server
+	option enabled '1'
+	option name 'tencent-ipv6'
+	option ip '2402:4e00::'
+	option type 'udp'
+	option server_group 'smartdns-cn'
+	option blacklist_ip '0'
+
+config server
+	option enabled '1'
+	option name 'google-ipv6'
+	option ip '2001:4860:4860::8888'
+	option type 'udp'
+	option server_group 'smartdns-us'
+	option exclude_default_group '1'
+	option blacklist_ip '0'
+
+config server
+	option enabled '1'
+	option name 'Cloudflare-ipv6'
+	option ip '2606:4700:4700::1111'
+	option type 'udp'
+	option server_group 'smartdns-us'
+	option exclude_default_group '1'
+	option blacklist_ip '0'
+

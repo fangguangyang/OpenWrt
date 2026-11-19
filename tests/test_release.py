@@ -1,10 +1,12 @@
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import tarfile
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -40,6 +42,13 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "M28C requires ImmortalWrt"):
                 release.resolve("openwrt", "25.12.6", ["m28c"])
 
+    def test_release_without_apk_is_rejected_before_fetching_checksums(self):
+        profiles = b'{"profiles":{"generic":{}},"default_packages":["opkg"]}'
+        with patch.object(release, "fetch", return_value=profiles) as fetch:
+            with self.assertRaisesRegex(ValueError, "does not use APK"):
+                release.resolve("immortalwrt", "24.10.6", ["amd64"])
+        fetch.assert_called_once()
+
     def test_snapshot_aliases_and_invalid_versions(self):
         for alias in ("SNAPSHOT", "main", "master"):
             self.assertEqual(release.resolve_version("https://example.org", alias), "SNAPSHOT")
@@ -47,7 +56,6 @@ class ReleaseTests(unittest.TestCase):
             release.resolve_version("https://example.org", "$(invalid)")
 
     def test_corrupt_download_is_rejected(self):
-        import io
         metadata = {"directory": "https://example.org/", "sdk": {"name": "sdk.tar.zst", "sha256": hashlib.sha256(b"valid").hexdigest()}}
         with tempfile.TemporaryDirectory() as directory, patch.object(release, "urlopen", return_value=io.BytesIO(b"corrupt")):
             with self.assertRaisesRegex(ValueError, "SHA256 mismatch"):
@@ -102,17 +110,15 @@ class PublishedFeedTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "No complete published package feed"):
                 release.resolve_feeds(matrix, "fangguangyang/openwrt-dist")
 
-    def test_opkg_requires_signed_index_and_matching_public_key(self):
+    def test_non_apk_feed_metadata_is_rejected(self):
         metadata = self.metadata(version="24.10.6", package_manager="opkg")
-        with patch.object(release, "fetch", return_value=json.dumps(self.published(metadata)).encode()), \
-             patch.object(release, "check_asset") as check:
-            release.resolve_feeds({"include": [metadata]}, "fangguangyang/openwrt-dist")
-        self.assertEqual([call.args[0].rsplit("/", 1)[-1] for call in check.call_args_list],
-                         ["Packages.gz", "Packages.sig", "feed-key.pub"])
+        with patch.object(release, "fetch") as fetch:
+            with self.assertRaisesRegex(ValueError, "require APK metadata"):
+                release.resolve_feeds({"include": [metadata]}, "fangguangyang/openwrt-dist")
+        fetch.assert_not_called()
 
     def test_cli_exports_repository_urls_for_the_firmware_matrix(self):
         import contextlib
-        import io
         metadata = self.metadata()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -136,6 +142,9 @@ class PublishedFeedTests(unittest.TestCase):
             original = Path(__file__).resolve().parents[1] / "scripts"
             for name in ("release.py", "build-image.sh"):
                 shutil.copy2(original / name, scripts / name)
+            profile = root / "profiles/amd64"
+            profile.mkdir(parents=True)
+            (profile / "features").touch()
             metadata = self.metadata()
             source = root / "metadata.json"
             source.write_text(json.dumps(metadata))
@@ -152,6 +161,95 @@ class PublishedFeedTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("mismatch for arch", result.stderr)
             self.assertEqual(list((work / "downloads").iterdir()), [])
+
+    def test_build_assembles_features_in_the_apk_device_profile(self):
+        project = Path(__file__).resolve().parents[1]
+        devices = [
+            self.metadata(),
+            self.metadata(id="m28c", target="rockchip/armv8", profile="widora_mangopi-m28c", arch="aarch64_generic"),
+        ]
+        for metadata in devices:
+            device = metadata["id"]
+            with self.subTest(device=device), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                shutil.copytree(project / "profiles", root / "profiles")
+                shutil.copytree(project / "scripts", root / "scripts")
+                (root / "profiles/amd64/features").write_text("# python\n")
+                (root / "profiles/m28c/features").write_text(
+                    "statistics\n\n  python # Include the Python runtime\npython\n# upnp\n")
+                # Core download and validation are tested separately.
+                (root / "scripts/prepare-openclash.py").write_text(
+                    "from pathlib import Path\nimport sys\nPath(sys.argv[3]).write_text(sys.argv[1])\n")
+                tools, downloads = root / "tools", root / "work/downloads"
+                tools.mkdir()
+                downloads.mkdir(parents=True)
+                archive = downloads / "imagebuilder.tar.gz"
+                entries = {".config": "", "repositories": "https://example.org/packages.adb\n"}
+                if device == "m28c":
+                    image_root = "build_dir/target-test/root-rockchip/"
+                    for name in ("usr/share/luci/menu.d/luci-app-qmodem-next.json", "etc/config/qmodem", "usr/bin/modem_scand",
+                                 "etc/init.d/qmodem_init", "etc/init.d/qmodem_network"):
+                        entries[image_root + name] = ""
+                    entries.update({
+                        "scripts/.fixture": "",
+                        "include/image.mk": "define Image/mkfs/ext4\n\tfixture\nendef\n",
+                        image_root + "usr/share/qmodem/modem_support.json": json.dumps({
+                            "modem_support": {
+                                "usb": {"fm350-gl": {"modes": ["rndis"], "pdp_index": "0"}},
+                                "device": {"fibocom": {"mediatek": {"vendor_id": ["0e8d"],
+                                                                    "product_id": ["7126", "7127"]}}},
+                            },
+                        }),
+                    })
+                with tarfile.open(archive, "w:gz") as bundle:
+                    for name, text in entries.items():
+                        data = text.encode()
+                        member = tarfile.TarInfo("builder/" + name)
+                        member.size = len(data)
+                        bundle.addfile(member, io.BytesIO(data))
+                metadata["imagebuilder"] = {"name": archive.name, "sha256": release.sha256(archive)}
+                source, feed, arguments = (root / name for name in ("metadata.json", "feed.json", "make-args"))
+                source.write_text(json.dumps(metadata))
+                feed.write_text(json.dumps(self.published(metadata)))
+                commands = {
+                    "curl": """case "$4" in
+    */build.json) cp "$TEST_FEED" "$6" ;;
+    */feed-key.pem) printf 'key' > "$6" ;;
+    *) exit 2 ;;
+esac
+""",
+                    "make": """if [ "$1" = image ]; then
+    shift
+    printf '%s\\n' "$@" > "$TEST_ARGS"
+    mkdir -p "bin/targets/$TEST_TARGET"
+    touch "bin/targets/$TEST_TARGET/firmware.img.gz"
+fi
+""",
+                }
+                for name, text in commands.items():
+                    command = tools / name
+                    command.write_text("#!/bin/sh\nset -eu\n" + text)
+                    command.chmod(0o755)
+                env = dict(os.environ, BUILD_WORKDIR=str(root / "work"), TEST_FEED=str(feed),
+                           TEST_ARGS=str(arguments), TEST_TARGET=metadata["target"],
+                           PATH=str(tools) + os.pathsep + os.environ["PATH"])
+                command = ["bash", str(root / "scripts/build-image.sh"), str(source), self.published(metadata)["feed_url"]]
+                result = subprocess.run(command, env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                options = dict(line.split("=", 1) for line in arguments.read_text().splitlines())
+                packages = options["PACKAGES"].split()
+                self.assertEqual(packages.count("python3-light"), int(device == "m28c"))
+                self.assertNotIn("luci-app-upnp", packages)
+                self.assertEqual("telnet-bsd" in packages, device == "amd64")
+                self.assertEqual("luci-app-qmodem-next" in packages, device == "m28c")
+                self.assertEqual("luci-i18n-qmodem-next-zh-cn" in packages, device == "m28c")
+                self.assertNotIn("xmm-modem", packages)
+                files = Path(options["FILES"])
+                self.assertTrue((files / "etc/apk/keys/custom-feed.pem").is_file())
+                self.assertEqual((files / "etc/init.d/zte_moden").is_file(), device == "amd64")
+                self.assertEqual((files / "etc/uci-defaults/98-qmodem-m28c").is_file(), device == "m28c")
+                self.assertEqual((files / "etc/uci-defaults/94-statistics").is_file(), device == "m28c")
+                self.assertTrue((root / "release" / f"{device}-firmware.tar.gz").is_file())
 
 
 if __name__ == "__main__":

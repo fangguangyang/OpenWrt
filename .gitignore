@@ -1,11 +1,4 @@
-.env*
-bin/
 .DS_Store
-transfer.sh
-
-user_modules
-docker-compose.yml
-_run.sh
 .build/
 image/
 release/

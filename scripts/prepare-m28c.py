@@ -1,36 +1,32 @@
 #!/usr/bin/env python3
-"""Prepare FM350 USB discovery and a growable M28C ext4 root filesystem."""
+"""Verify QModem support and prepare the M28C ext4 SD image."""
 import argparse
+import json
 from pathlib import Path
 import re
 import shutil
 
 
-ANCHOR = '\t[ -z $ifname ] && {\n'
-DISCOVERY = '''\t# M28C: select the data interface belonging to this FM350 AT port.
-\t# Upstream otherwise requires a fixed MAC and assumes ttyUSB sysfs depth.
-\t. /lib/functions/fm350.sh
-\tif fm350_for_port "$device"; then
-\t\tPREFIX="fm350"
-\t\tXMMDNS="GTDNS"
-\t\tAUTHCMD="CGAUTH"
-\t\tDNSQUERY="GTDNS=$profile"
-\t\tifname="$FM350_NET"
-\tfi
-'''
+def verify_qmodem(builder):
+    tables = list(builder.glob('build_dir/target-*/root-*/usr/share/qmodem/modem_support.json'))
+    if len(tables) != 1:
+        raise ValueError('Expected one installed QModem modem support table')
+    table = tables[0]
+    root = table.parents[3]
+    for name in ('usr/share/luci/menu.d/luci-app-qmodem-next.json', 'etc/config/qmodem', 'usr/bin/modem_scand',
+                 'etc/init.d/qmodem_init', 'etc/init.d/qmodem_network'):
+        if not (root / name).is_file():
+            raise ValueError(f'Missing QModem component: {name}')
+    support = json.loads(table.read_text())['modem_support']
+    modem = support['usb']['fm350-gl']
+    ids = support['device']['fibocom']['mediatek']
+    if ('rndis' not in modem['modes'] or modem['pdp_index'] != '0' or
+            '0e8d' not in ids['vendor_id'] or not {'7126', '7127'} <= set(ids['product_id'])):
+        raise ValueError('QModem FM350-GL USB support differs from the expected RNDIS profile')
 
 
-def prepare(builder, files):
-    candidates = list(builder.glob('build_dir/target-*/root-*/lib/netifd/proto/xmm.sh'))
-    if len(candidates) != 1:
-        raise ValueError(f'Expected one installed xmm-modem protocol, found {candidates}')
-    text = candidates[0].read_text()
-    if text.count(ANCHOR) != 1 or '0e8d7126|0e8d7127)' not in text:
-        raise ValueError('xmm-modem discovery changed upstream; review the M28C compatibility patch')
-    destination = files / 'lib/netifd/proto/xmm.sh'
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(text.replace(ANCHOR, DISCOVERY + ANCHOR))
-    destination.chmod(0o755)
+def prepare(builder):
+    verify_qmodem(builder)
     # make_ext4fs emits bitmap padding and resize-inode metadata that do not
     # survive a large growth cleanly with e2fsprogs. Generate this SD root with
     # the ImageBuilder's own e2fsprogs, then check it before packaging.
@@ -52,6 +48,5 @@ endef'''
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('builder', type=Path)
-    parser.add_argument('files', type=Path)
     args = parser.parse_args()
-    prepare(args.builder, args.files)
+    prepare(args.builder)

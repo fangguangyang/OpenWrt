@@ -21,6 +21,35 @@ target=${fields[1]}
 profile=${fields[2]}
 manager=${fields[3]}
 arch=${fields[4]}
+if [[ $manager != apk ]]; then
+    echo 'Firmware builds require APK metadata' >&2
+    exit 1
+fi
+if [[ $device != amd64 && $device != m28c ]]; then
+    echo "Unknown device: $device" >&2
+    exit 1
+fi
+
+read_list() {
+    awk '{sub(/#.*/, ""); for (i = 1; i <= NF; i++) if (!seen[$i]++) print $i}' "$@"
+}
+
+device_profile="$root/profiles/$device"
+requested_features=$(read_list "$device_profile/features")
+feature_profiles=()
+package_lists=("$root/profiles/common.packages" "$device_profile/packages")
+while IFS= read -r feature; do
+    [[ -n $feature ]] || continue
+    feature_profile="$root/profiles/features/$feature"
+    if [[ ! $feature =~ ^[a-z0-9-]+$ || ! -d $feature_profile ]]; then
+        echo "Unknown firmware feature '$feature' in profiles/$device/features" >&2
+        exit 1
+    fi
+    feature_profiles+=("$feature_profile")
+    if [[ -f $feature_profile/packages ]]; then
+        package_lists+=("$feature_profile/packages")
+    fi
+done <<< "$requested_features"
 work=${BUILD_WORKDIR:-"$root/.build/$device"}
 mkdir -p "$work" "$work/downloads" "$root/image/$device"
 work=$(realpath "$work")
@@ -44,13 +73,18 @@ cp "$work/feed.json" feed.json
 
 mkdir -p files keys
 cp -a "$root/profiles/common/files/." files/
-cp -a "$root/profiles/$device/files/." files/
+for feature_profile in "${feature_profiles[@]}"; do
+    if [[ -d $feature_profile/files ]]; then
+        cp -a "$feature_profile/files/." files/
+    fi
+done
+cp -a "$device_profile/files/." files/
 find files/etc/uci-defaults -type f -exec chmod 755 {} +
 for directory in files/etc/init.d files/usr/sbin files/etc/hotplug.d; do
     [[ ! -d $directory ]] || find "$directory" -type f -exec chmod 755 {} +
 done
-if [[ -f $root/profiles/$device/image.config ]]; then
-    python3 - "$root/profiles/$device/image.config" <<'PY'
+if [[ -f $device_profile/image.config ]]; then
+    python3 - "$device_profile/image.config" <<'PY'
 from pathlib import Path
 import re, sys
 config = Path('.config')
@@ -64,31 +98,22 @@ for line in Path(sys.argv[1]).read_text().splitlines():
 config.write_text(text)
 PY
 fi
-if [[ $manager == apk ]]; then
-    mkdir -p files/etc/apk/keys files/etc/apk/repositories.d
-    curl -fsSL --retry 3 "$feed_url/feed-key.pem" -o keys/custom-feed.pem
-    cp keys/custom-feed.pem files/etc/apk/keys/
-    printf '%s/packages.adb\n' "$feed_url" >> repositories
-    printf '%s/packages.adb\n' "$feed_url" > files/etc/apk/repositories.d/customfeeds.list
-else
-    mkdir -p files/etc/opkg/keys
-    curl -fsSL --retry 3 "$feed_url/feed-key.pub" -o keys/custom-feed.pub
-    fingerprint=$(staging_dir/host/bin/usign -F -p keys/custom-feed.pub)
-    cp keys/custom-feed.pub "keys/$fingerprint"
-    cp keys/custom-feed.pub "files/etc/opkg/keys/$fingerprint"
-    printf 'src/gz custom %s\n' "$feed_url" >> repositories.conf
-    printf 'src/gz custom %s\n' "$feed_url" > files/etc/opkg/customfeeds.conf
-fi
+mkdir -p files/etc/apk/keys files/etc/apk/repositories.d
+curl -fsSL --retry 3 "$feed_url/feed-key.pem" -o keys/custom-feed.pem
+cp keys/custom-feed.pem files/etc/apk/keys/
+printf '%s/packages.adb\n' "$feed_url" >> repositories
+printf '%s/packages.adb\n' "$feed_url" > files/etc/apk/repositories.d/customfeeds.list
 
-mapfile -t packages < <(sed -e 's/#.*//' -e '/^[[:space:]]*$/d' "$root/profiles/common.packages" "$root/profiles/$device/packages")
-options=("PROFILE=$profile" "PACKAGES=${packages[*]}" "FILES=$PWD/files" "ROOTFS_PARTSIZE=1024")
-options+=("DISABLED_SERVICES=openclash adguardhome mosdns smartdns")
+packages=$(read_list "${package_lists[@]}")
+packages=${packages//$'\n'/ }
+options=("PROFILE=$profile" "PACKAGES=$packages" "FILES=$PWD/files" "ROOTFS_PARTSIZE=1024")
+options+=("DISABLED_SERVICES=openclash adguardhome smartdns passwall snmpd miniupnpd")
 make info
 # Real dependency installation catches missing packages, ABI mismatches and
 # file conflicts before image generation, and retains the full package list.
-make manifest "PROFILE=$profile" "PACKAGES=${packages[*]}" > "$root/image/$device/package-manifest.txt"
+make manifest "PROFILE=$profile" "PACKAGES=$packages" > "$root/image/$device/package-manifest.txt"
 if [[ $device == m28c ]]; then
-    python3 "$root/scripts/prepare-m28c.py" "$PWD" "$PWD/files"
+    python3 "$root/scripts/prepare-m28c.py" "$PWD"
 fi
 python3 "$root/scripts/prepare-openclash.py" "$arch" "$PWD/files" "$root/image/$device/openclash-core.json"
 make image "${options[@]}"

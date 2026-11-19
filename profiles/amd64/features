@@ -1,0 +1,7 @@
+# Remove the leading # to include a feature in the amd64 image.
+# passwall
+# statistics
+# snmp
+upnp
+tools
+python

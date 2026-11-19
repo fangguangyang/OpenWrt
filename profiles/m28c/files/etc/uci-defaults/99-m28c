@@ -1,35 +1,9 @@
 #!/bin/sh
-# Based on Widora-M28C-Build/diy-part2.sh. M28C uses RK3528.
 # Keep the CIDR prefix from the generated LAN configuration format.
 uci -q delete network.lan.ipaddr
 uci add_list network.lan.ipaddr='192.168.60.1/24' || exit 1
-uci set system.@system[0].zonename='Asia/Shanghai'
-uci set system.@system[0].timezone='CST-8'
-
-uci set luci.main.mediaurlbase='/luci-static/argon'
-
-# Join the cellular interface to the existing WAN zone; keep stock WAN input
-# policy, masquerading and LAN -> WAN forwarding. Never bridge a modem to LAN.
-. /lib/functions.sh
-configure_wan_zone() {
-    local name networks
-    config_get name "$1" name
-    [ "$name" = wan ] || return 0
-    config_get networks "$1" network
-    case " $networks " in
-        *' cellular '*) ;;
-        *) uci add_list "firewall.$1.network=cellular" ;;
-    esac
-    uci set "firewall.$1.masq=1"
-    uci set "firewall.$1.mtu_fix=1"
-}
-config_load firewall
-config_foreach configure_wan_zone zone
-uci commit firewall
 
 # AIC8800 can enumerate after boot's initial wifi config pass.
 /usr/sbin/m28c-wifi-defaults
 uci commit network
-uci commit system
-uci commit luci
 exit 0

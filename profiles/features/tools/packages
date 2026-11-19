@@ -1,0 +1,11 @@
+bind-dig
+conntrack
+diffutils
+iputils-arping
+iputils-ping
+net-tools-route
+netcat
+nping
+ntpdate
+vim-full
+wget-ssl

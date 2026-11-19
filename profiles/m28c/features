@@ -1,0 +1,7 @@
+# Remove the leading # to include a feature in the M28C image.
+# passwall
+# statistics
+# snmp
+upnp
+tools
+python

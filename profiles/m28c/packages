@@ -1,35 +1,17 @@
 # Keep the M28C device profile defaults (AIC8800 SDIO firmware and Wi-Fi).
-luci-theme-argon
-luci-app-store
-luci-app-quickstart
 kmod-hwmon-pwmfan
-kmod-usb-net-qmi-wwan
-kmod-usb-net-cdc-mbim
-kmod-usb-net-cdc-ncm
+# FM350-GL USB modem data and AT ports.
 kmod-usb-net-rndis
-kmod-usb-net-cdc-ether
 kmod-usb-acm
 kmod-usb-serial-option
-kmod-usb-serial-wwan
+luci-app-qmodem-next
+luci-i18n-qmodem-next-zh-cn
+# USB storage support and SD root filesystem expansion.
 kmod-usb-storage
 kmod-usb-storage-uas
 kmod-fs-ext4
 kmod-fs-exfat
 kmod-fs-vfat
-uqmi
-umbim
-wwan
-luci-proto-qmi
-luci-proto-mbim
-# FM350 USB: current modemfeed package names for the AT/RNDIS dialer.
-xmm-modem
-luci-proto-xmm
-luci-app-3ginfo-lite
-luci-app-modemband
-luci-app-sms-tool-js
-# Explicit runtime tools for detection and SD root filesystem expansion.
-sms-tool
-comgt
 parted
 resize2fs
 tune2fs

@@ -1,0 +1,5 @@
+luci-app-statistics
+luci-i18n-statistics-zh-cn
+collectd-mod-interface
+collectd-mod-irq
+collectd-mod-sensors

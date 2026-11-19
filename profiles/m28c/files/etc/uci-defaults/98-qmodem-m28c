@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Scan the USB adapter even if it was already plugged in before boot.
+[ "$(uci -q get qmodem.main)" = main ] || exit 1
+uci batch <<'EOF'
+set qmodem.main.enable_usb_scan='1'
+set qmodem.main.enable_pcie_scan='0'
+set qmodem.main.try_preset_pcie='0'
+commit qmodem
+EOF

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+cron_file=/etc/crontabs/root
+mkdir -p /etc/crontabs || exit 1
+touch "$cron_file" || exit 1
+
+# Normalize the modem check to one run per scheduled hour.
+sed -i '\|^\* \*/3 \* \* \* /etc/init.d/zte_moden update_zte_date$|d' "$cron_file" || exit 1
+if ! grep -Fq ' /etc/init.d/zte_moden update_zte_date' "$cron_file"; then
+    printf '0 */3 * * * /etc/init.d/zte_moden update_zte_date\n' >> "$cron_file" || exit 1
+fi
+exit 0

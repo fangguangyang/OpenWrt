@@ -1,12 +1,42 @@
 #!/bin/sh
-# Keep ordinary DHCP/DNS working before any optional proxy subscription or
-# DNS application is configured. These applications can be enabled in LuCI.
-uci set openclash.config.enable=0
-uci set adguardhome.config.enabled=0
-uci set mosdns.config.enabled=0
-uci set smartdns.@smartdns[0].enabled=0
-uci commit openclash
-uci commit adguardhome
-uci commit mosdns
-uci commit smartdns
+# Seed OpenClash on fresh installs and upgrades that have no selected profile.
+# The installed package supplies its other settings, including the dashboard password.
+if [ -z "$(uci -q get openclash.config.config_path)" ]; then
+    uci batch <<'EOF' || exit 1
+set openclash.config.enable='0'
+set openclash.config.config_path='/etc/openclash/config/SubConfig.yaml'
+set openclash.config.operation_mode='redir-host'
+set openclash.config.en_mode='redir-host'
+set openclash.config.enable_custom_dns='1'
+set openclash.config.custom_fallback_filter='1'
+set openclash.config.ipv6_enable='1'
+set openclash.config.ipv6_dns='1'
+set openclash.config.china_ip_route='1'
+set openclash.config.china_ip6_route='1'
+set openclash.config.enable_respect_rules='1'
+set openclash.config.enable_redirect_dns='0'
+set openclash.config.redirect_dns='0'
+set openclash.smartdns_cn=dns_servers
+set openclash.smartdns_cn.group='nameserver'
+set openclash.smartdns_cn.type='udp'
+set openclash.smartdns_cn.ip='127.0.0.1'
+set openclash.smartdns_cn.port='6053'
+set openclash.smartdns_cn.enabled='1'
+set openclash.smartdns_us=dns_servers
+set openclash.smartdns_us.group='fallback'
+set openclash.smartdns_us.type='udp'
+set openclash.smartdns_us.ip='127.0.0.1'
+set openclash.smartdns_us.port='6553'
+set openclash.smartdns_us.enabled='1'
+commit openclash
+EOF
+fi
+
+# An upgrade from the previous image can restore the stock, empty SmartDNS config.
+if ! uci -q get 'smartdns.@server[0]' >/dev/null &&
+   ! uci -q get 'smartdns.@smartdns[0].port' >/dev/null; then
+    uci -f /usr/share/router-presets/smartdns import smartdns || exit 1
+    uci commit smartdns || exit 1
+fi
+
 exit 0
