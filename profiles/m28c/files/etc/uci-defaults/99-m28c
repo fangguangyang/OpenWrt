@@ -5,7 +5,8 @@ uci -q delete network.lan.ipaddr
 uci add_list network.lan.ipaddr='192.168.60.1/24' || exit 1
 uci set system.@system[0].zonename='Asia/Shanghai'
 uci set system.@system[0].timezone='CST-8'
-uci set luci.main.mediaurlbase='/luci-static/design'
+
+uci set luci.main.mediaurlbase='/luci-static/argon'
 
 # Join the cellular interface to the existing WAN zone; keep stock WAN input
 # policy, masquerading and LAN -> WAN forwarding. Never bridge a modem to LAN.

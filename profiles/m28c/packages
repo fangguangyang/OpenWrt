@@ -1,5 +1,5 @@
 # Keep the M28C device profile defaults (AIC8800 SDIO firmware and Wi-Fi).
-luci-theme-design
+luci-theme-argon
 luci-app-store
 luci-app-quickstart
 kmod-hwmon-pwmfan
