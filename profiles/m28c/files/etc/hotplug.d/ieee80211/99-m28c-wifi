@@ -1,0 +1,5 @@
+#!/bin/sh
+[ "$ACTION" = add ] || exit 0
+# wifi config is also run by the stock 10-wifi-detect hotplug handler.
+/sbin/wifi config
+/usr/sbin/m28c-wifi-defaults --reload

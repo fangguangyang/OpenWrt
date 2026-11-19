@@ -1,81 +1,97 @@
-# This is a basic workflow to help you get started with Actions
+name: Firmware
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "master" branch
   push:
-    branches: ["master"]
-    paths:
-      - "**"
-      - "!README*"
-      - "!changelog.txt"
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [master]
+    paths-ignore: ['**/*.md']
+  schedule:
+    - cron: '0 20 * * 5'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (empty uses repository OPENWRT_VERSION, then latest)'
+        default: ''
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  contents: write
+
+concurrency:
+  group: firmware-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      matrix: ${{ steps.resolve.outputs.matrix }}
+      repositories: ${{ steps.feeds.outputs.repositories }}
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-
-      # Runs a single command using the runners shell
-      - name: Build image
-        run: |
-          cat << EOF >> .env
-          CONFIG_TARGET_ROOTFS_EXT4FS=n
-          CONFIG_QCOW2_IMAGES=n
-          CONFIG_ISO_IMAGES=n
-          CONFIG_TARGET_IMAGES_PAD=n
-          CONFIG_VDI_IMAGES=n
-          CONFIG_VMDK_IMAGES=n
-          CONFIG_VHDX_IMAGES=n
-          CONFIG_GRUB_IMAGES=n
-          CONFIG_GRUB_CONSOLE=n
-          MODULES=lan openclash smartdns adguardhome vmtools zte-moden
-          EOF
-          ./run.sh --image=openwrt/imagebuilder:x86-64-${{ vars.OPENWRT_VERSION }} --use-mirror=0 --rm-first
-
-      - name: Prepare Artifacts
-        id: prepare-artifacts
-        run: |
-          ARTIFACTPATH="$(pwd)/image/"
-          mkdir -p $ARTIFACTPATH
-          cp bin/targets/x86/64/* $ARTIFACTPATH
-          echo "ARTIFACTPATH=$ARTIFACTPATH" >> $GITHUB_OUTPUT
-          echo "date=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
-      - name: Delete old nightly release
-        if: github.event_name == 'push'
-        run: |
-          gh release delete nightly --yes || true
-          git push origin :refs/tags/nightly || true
+      - uses: actions/checkout@v7
+      - name: Check release resolver
+        run: python3 -m unittest discover -s tests -v
+      - name: Resolve official ImageBuilder metadata
+        id: resolve
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ steps.prepare-artifacts.outputs.ARTIFACTPATH }}*
-          tag_name: nightly
-          name: "Nightly Build"
-          body: |
-            Auto-generated OpenWrt Build
-            
-            **Details**
-            - Profile: generic.x86_64
-            - Build Date: ${{ steps.prepare-artifacts.outputs.date }}
-            - Commit: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
-          prerelease: true
-          draft: false
+          OPENWRT_VERSION: ${{ inputs.version || vars.OPENWRT_VERSION || 'latest' }}
+          DISTRO: ${{ vars.OPENWRT_DISTRO || 'immortalwrt' }}
+          DEVICES: ${{ vars.OPENWRT_DEVICES || 'amd64,m28c' }}
+        run: python3 scripts/release.py resolve --distro "$DISTRO" --devices "$DEVICES" --output release.json
+      - name: Find matching published package feeds
+        id: feeds
+        env:
+          PACKAGE_REPOSITORY: ${{ vars.PACKAGE_REPOSITORY || 'fangguangyang/openwrt-dist' }}
+        run: python3 scripts/release.py feeds --metadata release.json --repository "$PACKAGE_REPOSITORY" --output package-feeds.json
 
-      - uses: actions/upload-artifact@main
+  build:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install ImageBuilder dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gawk libncurses-dev libssl-dev python3 rsync unzip zstd file wget
+      - name: Build image with matching signed packages
+        env:
+          BUILD_METADATA: ${{ toJSON(matrix) }}
+          FEED_URL: ${{ fromJSON(needs.prepare.outputs.repositories)[matrix.id] }}
+        run: |
+          printf '%s\n' "$BUILD_METADATA" > "$RUNNER_TEMP/build.json"
+          bash scripts/build-image.sh "$RUNNER_TEMP/build.json" "$FEED_URL"
+      - uses: actions/upload-artifact@v7
         with:
-          name: image_generic.x86_64
-          path: ./image
+          name: firmware-${{ matrix.id }}
+          path: image/${{ matrix.id }}/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.id }}
+          path: release/
+          if-no-files-found: error
+
+  release:
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: release
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ secrets.TOKEN || github.token }}
+          tag_name: firmware-${{ needs.prepare.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: Firmware ${{ needs.prepare.outputs.version }}
+          prerelease: ${{ needs.prepare.outputs.version == 'SNAPSHOT' }}
+          files: release/*
+          fail_on_unmatched_files: true
+          body: |
+            Automatic firmware for the selected devices (default: amd64 and Widora MangoPi M28C).
+            Official ImageBuilder archives are checked against upstream SHA256 metadata.
+            Each image reuses a matching signed package feed from an existing GitHub Release.
+            Source: ${{ github.repository }}@${{ github.sha }}

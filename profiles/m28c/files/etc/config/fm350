@@ -1,0 +1,2 @@
+config fm350 'main'
+	option enabled '1'

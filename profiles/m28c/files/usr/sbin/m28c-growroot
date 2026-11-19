@@ -1,0 +1,72 @@
+#!/bin/sh
+# Only grow the directly mounted ext4 root on an M28C SD card.
+# Never format, move a partition, or touch a disk with a trailing partition.
+fail() {
+    logger -t m28c-growroot "$*"
+    return 1
+}
+
+grow_root() {
+    local board rootdev fstype path part disk number table start end size sectors
+    local table_start table_size identity pending blocks blocksize fsbytes
+    board=$(cat /tmp/sysinfo/board_name 2>/dev/null)
+    [ "$board" = 'widora,mangopi-m28c' ] || return 0
+    rootdev=$(awk '$5 == "/" {print $3; exit}' /proc/self/mountinfo)
+    fstype=$(awk '$5 == "/" {for (i=6;i<=NF;i++) if ($i=="-") {print $(i+1); exit}}' /proc/self/mountinfo)
+    [ "$fstype" = ext4 ] || { fail "Root filesystem is $fstype, expected ext4; expansion skipped"; return 1; }
+    path=$(readlink -f "/sys/dev/block/$rootdev") || return 1
+    part=${path##*/}
+    disk=${path%/*}
+    disk=${disk##*/}
+    case "$disk:$part" in
+        mmcblk[0-9]:mmcblk[0-9]p2) ;;
+        *) fail "Unexpected root device $part; expansion skipped"; return 1 ;;
+    esac
+    [ "$(cat "/sys/class/block/$part/partition")" = 2 ] || return 1
+    # The SD card is a removable MMC device, not an eMMC user/boot area.
+    [ "$(cat "/sys/class/block/$disk/device/type")" = SD ] || { fail "Root disk $disk is not an SD card"; return 1; }
+    start=$(cat "/sys/class/block/$part/start")
+    size=$(cat "/sys/class/block/$part/size")
+    sectors=$(cat "/sys/class/block/$disk/size")
+    [ "$sectors" -le 4294967295 ] || { fail 'SD card exceeds the MBR size limit'; return 1; }
+    identity="$disk:$start:$sectors"
+    [ "$(cat /etc/m28c-growroot.done 2>/dev/null)" = "$identity:$size" ] && return 0
+    table=$(parted -m -s "/dev/$disk" unit s print) || { fail 'Cannot read partition table'; return 1; }
+    [ "$(printf '%s\n' "$table" | awk -F: '$1 ~ /^\/dev\// {print $6}')" = msdos ] || { fail 'Expected MBR partition table'; return 1; }
+    number=$(printf '%s\n' "$table" | awk -F: '$1 ~ /^[0-9]+$/ {print $1}')
+    [ "$number" = "$(printf '1\n2')" ] || { fail 'Expected only boot partition 1 and root partition 2; expansion skipped'; return 1; }
+    table_start=$(printf '%s\n' "$table" | awk -F: '$1 == 2 {sub(/s$/, "", $2); print $2}')
+    end=$(printf '%s\n' "$table" | awk -F: '$1 == 2 {sub(/s$/, "", $3); print $3}')
+    [ "$table_start" = "$start" ] || { fail 'Root partition start differs from the kernel view'; return 1; }
+    if [ "$((sectors - end - 1))" -gt 2048 ]; then
+        pending=$(cat /etc/m28c-growroot.pending 2>/dev/null)
+        [ "$pending" != "$identity" ] || { fail 'Previous partition expansion did not persist; no reboot loop'; return 1; }
+        # GNU Parted refuses a mounted partition in --script mode. Supply only
+        # the expected busy-partition confirmation in its noninteractive TTY
+        # mode, after validating the layout and the direction of the growth.
+        # A kernel reread failure can occur after writing; verify independently.
+        printf 'Yes\n' | LC_ALL=C parted ---pretend-input-tty "/dev/$disk" resizepart 2 100% >/tmp/m28c-growroot.log 2>&1
+        table=$(parted -m -s "/dev/$disk" unit s print) || return 1
+        table_start=$(printf '%s\n' "$table" | awk -F: '$1 == 2 {sub(/s$/, "", $2); print $2}')
+        end=$(printf '%s\n' "$table" | awk -F: '$1 == 2 {sub(/s$/, "", $3); print $3}')
+        [ "$table_start" = "$start" ] && [ "$end" = "$((sectors - 1))" ] || { fail 'Partition expansion failed; see /tmp/m28c-growroot.log'; return 1; }
+        printf '%s\n' "$identity" > /etc/m28c-growroot.pending
+        logger -t m28c-growroot "Expanded /dev/$part to SD capacity; rebooting once to reload the partition table"
+        sync
+        reboot
+        return 0
+    fi
+    table_size=$((end - start + 1))
+    [ "$size" = "$table_size" ] || { fail 'Kernel partition size is stale; filesystem expansion skipped'; return 1; }
+    resize2fs "/dev/$part" >/tmp/m28c-growroot.log 2>&1 || { fail 'ext4 expansion failed; see /tmp/m28c-growroot.log'; return 1; }
+    table=$(tune2fs -l "/dev/$part") || return 1
+    blocks=$(printf '%s\n' "$table" | awk '/^Block count:/ {print $3}')
+    blocksize=$(printf '%s\n' "$table" | awk '/^Block size:/ {print $3}')
+    [ -n "$blocks" ] && [ -n "$blocksize" ] || return 1
+    fsbytes=$((blocks * blocksize))
+    [ "$fsbytes" -ge "$((size * 512 - blocksize))" ] || { fail 'ext4 did not grow to the root partition size'; return 1; }
+    printf '%s\n' "$identity:$size" > /etc/m28c-growroot.done
+    logger -t m28c-growroot "ext4 root expanded: $fsbytes bytes on /dev/$part"
+}
+
+grow_root

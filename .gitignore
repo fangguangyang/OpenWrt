@@ -6,3 +6,9 @@ transfer.sh
 user_modules
 docker-compose.yml
 _run.sh
+.build/
+image/
+release/
+release.json
+package-feeds.json
+__pycache__/

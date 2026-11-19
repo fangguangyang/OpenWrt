@@ -1,0 +1,73 @@
+#!/bin/sh
+. /lib/functions.sh
+. /lib/functions/fm350.sh
+
+set_port() {
+    local key=$1 current
+    current=$(uci -q get "$key")
+    # Keep manual selections; follow tty renumbering for our detected port.
+    if [ -z "$current" ] || [ "$current" = "$old_port" ]; then
+        uci set "$key=$FM350_PORT"
+    fi
+}
+
+configure_modem() {
+    local old_port
+    old_port=$(uci -q get fm350.main.detected_port)
+    if ! uci -q get network.cellular >/dev/null; then
+        uci set network.cellular=interface
+        uci set network.cellular.proto=xmm
+        uci set network.cellular.pdp=ip
+        uci set network.cellular.apn='ctnet'
+        uci set network.cellular.auth=auto
+        uci set network.cellular.profile=1
+        uci set network.cellular.delay=10
+        uci set network.cellular.auto=1
+        uci set network.cellular.metric=20
+        uci set network.cellular.m28c_managed=1
+    fi
+    if [ "$(uci -q get network.cellular.m28c_managed)" = 1 ]; then
+        set_port network.cellular.device
+    fi
+    set_port '3ginfo.@3ginfo[0].device'
+    [ -n "$(uci -q get '3ginfo.@3ginfo[0].network')" ] || uci set '3ginfo.@3ginfo[0].network=cellular'
+    set_port 'sms_tool_js.@sms_tool_js[0].readport'
+    set_port 'sms_tool_js.@sms_tool_js[0].sendport'
+    set_port 'sms_tool_js.@sms_tool_js[0].ussdport'
+    set_port 'sms_tool_js.@sms_tool_js[0].atport'
+    set_port 'modemband.@modemband[0].set_port'
+    uci set 'modemband.@modemband[0].iface=cellular'
+    uci set "fm350.main.detected_port=$FM350_PORT"
+    # Commit only on enumeration changes, never on every polling cycle.
+    local config
+    for config in network 3ginfo sms_tool_js modemband fm350; do
+        uci commit "$config"
+    done
+    if [ "$(uci -q get network.cellular.m28c_managed)" = 1 ]; then
+        ubus call network reload >/dev/null 2>&1
+        # Availability may have been cleared before the USB serial/net drivers
+        # finished binding. Re-enable once per appearance, not after PIN errors.
+        ubus call network.interface.cellular notify_proto '{"action":5,"available":true}' >/dev/null 2>&1
+        [ "$(uci -q get network.cellular.auto)" = 0 ] || ifup cellular
+    fi
+    logger -t fm350-detect "FM350-GL detected: $FM350_PORT, data interface $FM350_NET (cellular)"
+}
+
+last_device=
+while :; do
+    if fm350_find; then
+        # devnum changes even if a quick unplug/replug reuses all path names.
+        device="$FM350_USB:$(cat "$FM350_USB/devnum"):$FM350_PORT:$FM350_NET"
+        if [ "$device" != "$last_device" ]; then
+            configure_modem
+            last_device=$device
+        fi
+    else
+        if [ -n "$last_device" ] && [ "$(uci -q get network.cellular.m28c_managed)" = 1 ]; then
+            ifdown cellular
+            logger -t fm350-detect 'FM350-GL removed; waiting for USB enumeration'
+        fi
+        last_device=
+    fi
+    sleep 10
+done

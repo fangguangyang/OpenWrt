@@ -1,0 +1,12 @@
+#!/bin/sh
+# Keep ordinary DHCP/DNS working before any optional proxy subscription or
+# DNS application is configured. These applications can be enabled in LuCI.
+uci set openclash.config.enable=0
+uci set adguardhome.config.enabled=0
+uci set mosdns.config.enabled=0
+uci set smartdns.@smartdns[0].enabled=0
+uci commit openclash
+uci commit adguardhome
+uci commit mosdns
+uci commit smartdns
+exit 0

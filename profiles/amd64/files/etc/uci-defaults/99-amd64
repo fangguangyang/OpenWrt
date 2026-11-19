@@ -1,0 +1,11 @@
+#!/bin/sh
+# Preserve the previous x86 LAN settings without replacing device port layouts.
+uci set network.lan.ipaddr='192.168.30.13'
+uci set network.lan.gateway='192.168.30.11'
+uci set system.@system[0].zonename='Asia/Shanghai'
+uci set system.@system[0].timezone='CST-8'
+uci set luci.main.mediaurlbase='/luci-static/argon'
+uci commit network
+uci commit system
+uci commit luci
+exit 0

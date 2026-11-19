@@ -1,0 +1,26 @@
+# Shared router applications. Dependencies are resolved by ImageBuilder.
+luci
+luci-compat
+luci-i18n-base-zh-cn
+luci-i18n-firewall-zh-cn
+luci-app-openclash
+luci-app-adguardhome
+luci-app-mosdns
+luci-app-smartdns
+smartdns
+ca-bundle
+curl
+bash
+dnsmasq-full
+-dnsmasq
+ip-full
+kmod-tun
+kmod-inet-diag
+kmod-nft-tproxy
+kmod-nft-socket
+usbutils
+block-mount
+htop
+tcpdump
+iperf3
+unzip
