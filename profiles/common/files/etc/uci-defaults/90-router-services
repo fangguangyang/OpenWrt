@@ -1,9 +1,9 @@
 #!/bin/sh
-# Seed OpenClash on fresh installs and upgrades that have no selected profile.
-# The installed package supplies its other settings, including the dashboard password.
-if [ -z "$(uci -q get openclash.config.config_path)" ]; then
-    uci batch <<'EOF' || exit 1
-set openclash.config.enable='0'
+# Seed settings on the first boot. The packages supply their other defaults.
+uci batch <<'EOF' || exit 1
+set adguardhome.config.enabled='1'
+commit adguardhome
+set openclash.config.enable='1'
 set openclash.config.config_path='/etc/openclash/config/SubConfig.yaml'
 set openclash.config.operation_mode='redir-host'
 set openclash.config.en_mode='redir-host'
@@ -30,13 +30,4 @@ set openclash.smartdns_us.port='6553'
 set openclash.smartdns_us.enabled='1'
 commit openclash
 EOF
-fi
-
-# An upgrade from the previous image can restore the stock, empty SmartDNS config.
-if ! uci -q get 'smartdns.@server[0]' >/dev/null &&
-   ! uci -q get 'smartdns.@smartdns[0].port' >/dev/null; then
-    uci -f /usr/share/router-presets/smartdns import smartdns || exit 1
-    uci commit smartdns || exit 1
-fi
-
 exit 0

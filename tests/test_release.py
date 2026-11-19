@@ -244,7 +244,10 @@ fi
                 self.assertEqual("luci-app-qmodem-next" in packages, device == "m28c")
                 self.assertEqual("luci-i18n-qmodem-next-zh-cn" in packages, device == "m28c")
                 self.assertNotIn("xmm-modem", packages)
+                for service in ("openclash", "adguardhome", "smartdns"):
+                    self.assertNotIn(service, options["DISABLED_SERVICES"].split())
                 files = Path(options["FILES"])
+                self.assertIn("option enabled '1'", (files / "etc/config/smartdns").read_text())
                 self.assertTrue((files / "etc/apk/keys/custom-feed.pem").is_file())
                 self.assertEqual((files / "etc/init.d/zte_moden").is_file(), device == "amd64")
                 self.assertEqual((files / "etc/uci-defaults/98-qmodem-m28c").is_file(), device == "m28c")

@@ -107,7 +107,7 @@ printf '%s/packages.adb\n' "$feed_url" > files/etc/apk/repositories.d/customfeed
 packages=$(read_list "${package_lists[@]}")
 packages=${packages//$'\n'/ }
 options=("PROFILE=$profile" "PACKAGES=$packages" "FILES=$PWD/files" "ROOTFS_PARTSIZE=1024")
-options+=("DISABLED_SERVICES=openclash adguardhome smartdns passwall snmpd miniupnpd")
+options+=("DISABLED_SERVICES=passwall snmpd miniupnpd")
 make info
 # Real dependency installation catches missing packages, ABI mismatches and
 # file conflicts before image generation, and retains the full package list.

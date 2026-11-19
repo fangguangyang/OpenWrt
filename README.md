@@ -38,7 +38,7 @@
 - 两种固件都使用 Argon、简体中文和上海时区。M28C 的 LAN 地址为 `192.168.60.1`，集成 AIC8800 Wi-Fi、PWM 风扇和 QModem。
 - M28C Wi-Fi 默认启用，按实际 radio 的 band 命名为 `Widora_5G` / `Widora_2.4G`，密码为 `password123`；可在 `profiles/m28c/files/usr/sbin/m28c-wifi-defaults` 修改。支持驱动延迟加载，不假定存在两张 radio；初始化标记可防止后续开机覆盖手工 Wi-Fi 设置。
 - amd64 保留 LAN `192.168.30.13` / 网关 `192.168.30.11`，使用 Argon 主题，默认安装 VMware 的 `open-vm-tools`。PVE/KVM 用户可在 `profiles/amd64/packages` 中将其替换为 `qemu-ga`；两者都安装 `/sbin/shutdown`，必须二选一。amd64 还配置了 ZTE 光猫每三小时校时，目标为 `192.168.1.1`。在路由器上把光猫的 Telnet 密码保存到 `/root/.zte-modem-password` 并将文件权限设为 `600`，任务才会连接光猫。
-- 两种固件共用插件预设。SmartDNS 提供 6053 / 6553 两个端口以及 `smartdns-cn` / `smartdns-us` 上游组。AdGuardHome 在 7553 端口提供 DNS，预设上游和过滤列表，管理端口为 3000。OpenClash 提供 `SubConfig.yaml` 和配套 DNS 设置，导入实际订阅后即可配置节点。三项服务默认停用，基础 DHCP/DNS 使用 dnsmasq。
+- 两种固件共用插件预设，SmartDNS、AdGuardHome 和 OpenClash 在首次开机时启动。SmartDNS 提供 6053 / 6553 两个端口以及 `smartdns-cn` / `smartdns-us` 上游组。AdGuardHome 在 7553 端口提供 DNS，预设上游和过滤列表，管理端口为 3000。OpenClash 启动时加载 `SubConfig.yaml`，预设策略组使用 DIRECT，导入实际订阅后可配置代理节点。基础 DHCP/DNS 由 dnsmasq 在 53 端口提供。
 - 构建从 `scripts/prepare-openclash.py` 指定的上游 commit 下载对应架构的 OpenClash Meta 核心，校验归档 SHA256 和 ELF CPU 架构，记录在 `openclash-core.json`。更新核心时同时更新 commit 和两种架构的归档 SHA256。
 - LAN、WAN、网桥和防火墙按设备配置。PPPoE、IPv6、root 密码和 SSH 公钥在对应设备的 LuCI 中设置。
 
