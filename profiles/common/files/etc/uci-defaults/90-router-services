@@ -1,33 +1,43 @@
 #!/bin/sh
-# Seed settings on the first boot. The packages supply their other defaults.
+# Disable the package's built-in DNS servers before enabling the SmartDNS entries.
+config=$(uci -q -X show openclash) || exit 1
+for section in $(printf '%s\n' "$config" | sed -n 's/^\(openclash\.[^.]*\)=dns_servers$/\1/p'); do
+    uci set "$section.enabled=0" || exit 1
+done
+
 uci batch <<'EOF' || exit 1
-set adguardhome.config.enabled='1'
-commit adguardhome
 set openclash.config.enable='1'
 set openclash.config.config_path='/etc/openclash/config/SubConfig.yaml'
 set openclash.config.operation_mode='redir-host'
 set openclash.config.en_mode='redir-host'
-set openclash.config.enable_custom_dns='1'
-set openclash.config.custom_fallback_filter='1'
 set openclash.config.ipv6_enable='1'
 set openclash.config.ipv6_dns='1'
 set openclash.config.china_ip_route='1'
 set openclash.config.china_ip6_route='1'
-set openclash.config.enable_respect_rules='1'
-set openclash.config.enable_redirect_dns='0'
-set openclash.config.redirect_dns='0'
+set openclash.config.enable_custom_dns='1'
+set openclash.config.custom_fallback_filter='1'
+set openclash.config.enable_respect_rules='0'
+set openclash.config.enable_redirect_dns='1'
+set openclash.config.append_wan_dns='0'
+set openclash.config.append_default_dns='0'
+set openclash.smartdns_bootstrap=dns_servers
+set openclash.smartdns_bootstrap.group='default'
+set openclash.smartdns_bootstrap.type='udp'
+set openclash.smartdns_bootstrap.ip='127.0.0.1'
+set openclash.smartdns_bootstrap.port='6053'
+set openclash.smartdns_bootstrap.enabled='1'
 set openclash.smartdns_cn=dns_servers
 set openclash.smartdns_cn.group='nameserver'
 set openclash.smartdns_cn.type='udp'
 set openclash.smartdns_cn.ip='127.0.0.1'
 set openclash.smartdns_cn.port='6053'
 set openclash.smartdns_cn.enabled='1'
+set openclash.smartdns_cn.node_resolve='1'
 set openclash.smartdns_us=dns_servers
 set openclash.smartdns_us.group='fallback'
 set openclash.smartdns_us.type='udp'
 set openclash.smartdns_us.ip='127.0.0.1'
 set openclash.smartdns_us.port='6553'
 set openclash.smartdns_us.enabled='1'
-commit openclash
 EOF
-exit 0
+uci commit openclash

@@ -5,7 +5,6 @@ luci-i18n-base-zh-cn
 luci-i18n-firewall-zh-cn
 luci-theme-argon
 luci-app-openclash
-luci-app-adguardhome
 luci-app-smartdns
 luci-i18n-smartdns-zh-cn
 smartdns
