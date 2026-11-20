@@ -10,6 +10,8 @@ set openclash.config.enable='1'
 set openclash.config.config_path='/etc/openclash/config/SubConfig.yaml'
 set openclash.config.operation_mode='redir-host'
 set openclash.config.en_mode='redir-host'
+set openclash.config.skip_proxy_address='1'
+set openclash.config.intranet_allowed='1'
 set openclash.config.ipv6_enable='1'
 set openclash.config.ipv6_dns='1'
 set openclash.config.china_ip_route='1'
@@ -40,4 +42,23 @@ set openclash.smartdns_us.ip='127.0.0.1'
 set openclash.smartdns_us.port='6553'
 set openclash.smartdns_us.enabled='1'
 EOF
+
+lan_device=$(uci -q get network.lan.device)
+if [ -n "$lan_device" ]; then
+    uci set "openclash.config.lan_interface_name=$lan_device" || exit 1
+fi
+
+# OpenClash expects incoming device names. With no dedicated WAN it uses fw4.
+for network in wan wan6; do
+    case "$(uci -q get "network.$network.proto")" in
+        dhcp|dhcpv6|static) device=$(uci -q get "network.$network.device") ;;
+        pppoe) device="pppoe-$network" ;;
+        *) continue ;;
+    esac
+    case "$device" in ''|@*) continue ;; esac
+    case " $(uci -q get openclash.config.intranet_allowed_wan_name) " in
+        *" $device "*) continue ;;
+    esac
+    uci add_list "openclash.config.intranet_allowed_wan_name=$device" || exit 1
+done
 uci commit openclash

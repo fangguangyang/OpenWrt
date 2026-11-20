@@ -51,7 +51,7 @@
 | `passwall` | PassWall，订阅在 LuCI 中填写 |
 | `statistics` | LuCI 统计及接口、传感器和中断采集 |
 | `snmp` | SNMP 管理界面，启用前配置访问权限 |
-| `upnp` | nftables 版 UPnP，服务默认停用 |
+| `upnp` | nftables 版 UPnP，amd64 和 M28C 默认启用并随系统启动 |
 | `tools` | `dig`、`conntrack`、`nping`、Vim 等诊断工具 |
 | `python` | Python 3 轻量运行时 |
 

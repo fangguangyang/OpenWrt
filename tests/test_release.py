@@ -174,7 +174,7 @@ class PublishedFeedTests(unittest.TestCase):
                 root = Path(directory)
                 shutil.copytree(project / "profiles", root / "profiles")
                 shutil.copytree(project / "scripts", root / "scripts")
-                (root / "profiles/amd64/features").write_text("# python\n")
+                (root / "profiles/amd64/features").write_text("upnp\n# python\n")
                 (root / "profiles/m28c/features").write_text(
                     "statistics\n\n  python # Include the Python runtime\npython\n# upnp\n")
                 # Core download and validation are tested separately.
@@ -239,16 +239,18 @@ fi
                 options = dict(line.split("=", 1) for line in arguments.read_text().splitlines())
                 packages = options["PACKAGES"].split()
                 self.assertEqual(packages.count("python3-light"), int(device == "m28c"))
-                self.assertNotIn("luci-app-upnp", packages)
+                for package in ("luci-app-upnp", "miniupnpd-nftables"):
+                    self.assertEqual(package in packages, device == "amd64")
                 self.assertEqual("telnet-bsd" in packages, device == "amd64")
                 self.assertEqual("luci-app-qmodem-next" in packages, device == "m28c")
                 self.assertEqual("luci-i18n-qmodem-next-zh-cn" in packages, device == "m28c")
                 self.assertNotIn("xmm-modem", packages)
                 self.assertNotIn("luci-app-adguardhome", packages)
                 self.assertNotIn("adguardhome", packages)
-                for service in ("openclash", "smartdns"):
+                for service in ("openclash", "smartdns", "miniupnpd"):
                     self.assertNotIn(service, options["DISABLED_SERVICES"].split())
                 files = Path(options["FILES"])
+                self.assertEqual((files / "etc/uci-defaults/94-upnp").is_file(), device == "amd64")
                 self.assertFalse((files / "etc/adguardhome/adguardhome.yaml").exists())
                 smartdns = (files / "etc/config/smartdns").read_text()
                 self.assertIn("option enabled '1'", smartdns)

@@ -75,23 +75,6 @@ config server
 
 config server
 	option enabled '1'
-	option name 'opendns'
-	option blacklist_ip '0'
-	option ip 'doh.opendns.com/dns-query'
-	option type 'https'
-	option server_group 'smartdns-us'
-	option exclude_default_group '1'
-
-config server
-	option enabled '1'
-	option name 'dnspai'
-	option ip '101.226.4.6'
-	option type 'udp'
-	option blacklist_ip '0'
-	option server_group 'smartdns-cn'
-
-config server
-	option enabled '1'
 	option name 'Cloudflare'
 	option blacklist_ip '0'
 	option ip 'dns.cloudflare.com/dns-query'
