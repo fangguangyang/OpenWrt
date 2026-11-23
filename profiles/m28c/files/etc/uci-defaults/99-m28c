@@ -1,7 +1,7 @@
 #!/bin/sh
 # Keep the CIDR prefix from the generated LAN configuration format.
 uci -q delete network.lan.ipaddr
-uci add_list network.lan.ipaddr='192.168.60.1/24' || exit 1
+uci add_list network.lan.ipaddr='192.168.70.1/24' || exit 1
 
 # AIC8800 can enumerate after boot's initial wifi config pass.
 /usr/sbin/m28c-wifi-defaults

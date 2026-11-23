@@ -35,7 +35,7 @@
 ### 固件定制
 
 - 软件清单位于 `profiles/common.packages` 和 `profiles/<设备>/packages`。首次启动配置、服务及热插拔脚本位于各 profile 的 `files/` 目录。
-- 两种固件都使用 Argon、简体中文和上海时区。M28C 的 LAN 地址为 `192.168.60.1`，集成 AIC8800 Wi-Fi、PWM 风扇和 QModem。
+- 两种固件都使用 Argon、简体中文和上海时区。M28C 的 LAN 地址为 `192.168.70.1`，集成 AIC8800 Wi-Fi、PWM 风扇和 QModem。
 - M28C Wi-Fi 默认启用，按实际 radio 的 band 命名为 `Widora_5G` / `Widora_2.4G`，密码为 `password123`；可在 `profiles/m28c/files/usr/sbin/m28c-wifi-defaults` 修改。支持驱动延迟加载，不假定存在两张 radio；初始化标记可防止后续开机覆盖手工 Wi-Fi 设置。
 - amd64 保留 LAN `192.168.30.13` / 网关 `192.168.30.11`，使用 Argon 主题，默认安装 VMware 的 `open-vm-tools`。PVE/KVM 用户可在 `profiles/amd64/packages` 中将其替换为 `qemu-ga`；两者都安装 `/sbin/shutdown`，必须二选一。amd64 还配置了 ZTE 光猫每三小时校时，目标为 `192.168.1.1`。在路由器上把光猫的 Telnet 密码保存到 `/root/.zte-modem-password` 并将文件权限设为 `600`，任务才会连接光猫。
 - 两种固件默认启动 SmartDNS 和 OpenClash。LAN 客户端的 DNS 请求先到 dnsmasq（53），再转发到 OpenClash（7874）。OpenClash 使用 SmartDNS 的 6053 端口作为国内主上游，6553 端口作为海外备用上游。dnsmasq 继续提供 DHCP 和本地域名解析。初始配置 `SubConfig.yaml` 的代理策略组使用 DIRECT，导入实际订阅后可配置代理节点。
@@ -57,7 +57,7 @@
 
 ### 在 M28C 上使用 FM350-GL
 
-1. 将新固件写入 SD 卡，插好 SIM 卡和 FM350-GL 的 USB 转接板，再启动路由器。打开 `http://192.168.60.1`，进入 **调制解调器 → QModem → 概览**。QModem 扫描 USB 后显示型号、运营商、信号和连接状态。
+1. 将新固件写入 SD 卡，插好 SIM 卡和 FM350-GL 的 USB 转接板，再启动路由器。打开 `http://192.168.70.1`，进入 **调制解调器 → QModem → 概览**。QModem 扫描 USB 后显示型号、运营商、信号和连接状态。
 2. 进入 **调制解调器 → QModem → 网络配置**，在 FM350-GL 那一行点击编辑。确认全局和模组的 **启用拨号** 都已勾选。APN 可以先选自动，无法连接时按 SIM 卡运营商选择，例如电信 `ctnet`、移动 `cmnet`、联通 `3gnet`。需要 PIN 的卡在同一处填写。保存并应用。
 3. 回到 **概览** 查看拨号是否连通。收发短信在 **短信消息**，制式和频段设置在 **高级调制解调器配置**。重新拨号和拨号日志在 **网络配置** 的模组行。
 
